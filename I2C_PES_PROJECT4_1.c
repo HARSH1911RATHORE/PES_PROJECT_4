@@ -65,7 +65,7 @@
 
 #define NACK  I2C0->C1 |= I2C_C1_TXAK_MASK
 #define ACK   I2C0->C1 &= ~I2C_C1_TXAK_MASK
-#define ALERT I2C0->SMB= I2C0->SMB |= I2C_SMB_ALERTEN_MASK
+//#define ALERT I2C0->SMB= I2C0->SMB |= I2C_SMB_ALERTEN_MASK
 
 void i2c_init(void)
 {
@@ -78,10 +78,10 @@ void i2c_init(void)
 	PORTC->PCR[9] |= PORT_PCR_MUX(2);
 
 
-
-	PORTC->PCR[16] |=  PORT_PCR_MUX(1);
-	PORTC->PCR[16] |= PORT_PCR_PS_MASK;
-	FGPIO_PDDR_PDD(16);
+//
+//	PORTC->PCR[16] |=  PORT_PCR_MUX(1);
+//	PORTC->PCR[16] |= PORT_PCR_PS_MASK;
+//	FGPIO_PDDR_PDD(16);
 
 	//set to 400k baud
 	//baud= bus freq/(scl_div+mul)
@@ -269,6 +269,7 @@ int i2c_read_bytes(uint8_t dev_adx,uint8_t reg_adx)
         ACK;              /*Tell hw to send ACK after read*/
         dummy=I2C0->D;    /*DUMMY READ TO START I2C READ*/
         I2C_WAIT          /*WAIT FOR COMPLETION*/
+		PRINTF("DUMMY=%d\n\r",dummy);
 
 		/*  do
         {
@@ -291,10 +292,38 @@ int i2c_read_bytes(uint8_t dev_adx,uint8_t reg_adx)
         PRINTF("\n\r%d",data_buf[1]);
 
         return 1;
+       // return data;
 }
 
+//int temp_reading(void)
+//{
+//	uint8_t dev_adx=0x90;
+//	uint8_t reg_adx=0x00;
+//	int current_temp=i2c_read_bytes(dev_adx,reg_adx);
+//	return current_temp;
+//}
+//
+//void average(void)
+//{
+//	int current_temperature=temp_reading();
+//	for (i=0:i<n;i++)
+//	{
+//	int sum=sum+data[i];
+//	}
+//	int average_temperature=(sum)/n;
+//	PRINTF("AVERAGE TEMPERATURE=%d\n\r",average_temperature);
+//}
+//
+//void alert(void)
+//{
+//int alert=temp_reading;
+//PRINTF("ALERT TEMPERATURE=%d\n\r",alert);
+//}
 
-
+//void disconnected(void)
+//{
+//
+//}
 
 int main(void) {
 
@@ -309,21 +338,30 @@ int main(void) {
 	i2c_init();
 	uint8_t data[2];
 	uint8_t addr = 0x90;
-
 	uint8_t temp_addr = 0x00;
 	i2c_read_bytes(addr, temp_addr);
 
 
-	uint8_t config_addr=0x01;
-	uint8_t temp_high_register=0x03;
 
 
-	i2c_write_byte(addr,config_addr,0x0C);
-	i2c_write_byte(addr,config_addr,0xA0);
-	i2c_write_byte(addr,temp_high_register,0x1E);
-	i2c_write_byte(addr,temp_high_register,0x00);
 
-	ALERT;
+//
+//	uint8_t config_addr=0x01;
+//	uint8_t temp_high_register=0x03;
+//
+//	i2c_write_byte(addr,config_addr,0x0C);
+//	i2c_write_byte(addr,config_addr,0xA0);
+//	i2c_write_byte(addr,temp_high_register,0x1E);
+//	i2c_write_byte(addr,temp_high_register,0x00);
+//
+//	ALERT;
+
+
+
+
+
+
+
 
 
 	//i2c_read_bytes(addr, temp_addr);
