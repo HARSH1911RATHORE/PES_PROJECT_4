@@ -58,13 +58,13 @@ void i2c_init(void)
 	PORTC->PCR[9] |= PORT_PCR_MUX(2);
 
 
-//
+	//
 	PORTC->PCR[16] |=  PORT_PCR_MUX(1);
 	PORTC->PCR[16] |= PORT_PCR_PE_MASK;
 	PORTC->PCR[16] |= PORT_PCR_PS_MASK;
 
-    PORTC->PCR[16] |= 	GPIO_PDDR_PDD(0);
-//	FGPIO_PDDR_PDD(16);
+	PORTC->PCR[16] |= 	GPIO_PDDR_PDD(0);
+	//	FGPIO_PDDR_PDD(16);
 
 	//set to 400k baud
 	//baud= bus freq/(scl_div+mul)
@@ -85,21 +85,21 @@ void i2c_init(void)
 
 void i2c_write_byte(uint8_t dev, uint8_t reg, uint8_t data_byte1,uint8_t data_byte2)
 {
-        I2C_TRAN;          /*SET TO TRANSMIT MODE*/
-        I2C_M_START;       /*SEND START*/
-        I2C0->D = dev;     /*send dev address (write)*/
-        I2C_WAIT;           /*WAIT FOR ACK*/
+	I2C_TRAN;          /*SET TO TRANSMIT MODE*/
+	I2C_M_START;       /*SEND START*/
+	I2C0->D = dev;     /*send dev address (write)*/
+	I2C_WAIT;           /*WAIT FOR ACK*/
 
-        I2C0->D = reg;     /*send register address*/
-        I2C_WAIT;
+	I2C0->D = reg;     /*send register address*/
+	I2C_WAIT;
 
-        I2C0->D = data_byte1;    /*send data byte 1*/
-        I2C_WAIT;
+	I2C0->D = data_byte1;    /*send data byte 1*/
+	I2C_WAIT;
 
-        I2c0->D = data_byte2;    /*send data byte 2*/
-        I2C_WAIT;
+	I2C0->D = data_byte2;    /*send data byte 2*/
+	I2C_WAIT;
 
-        I2C_M_STOP;
+	I2C_M_STOP;
 }
 
 
@@ -156,37 +156,37 @@ void i2c_write_byte(uint8_t dev, uint8_t reg, uint8_t data_byte1,uint8_t data_by
 #if 0
 void i2c_read_byte(uint8_t dev, uint8_t reg)
 {
-		uint8_t dummy;
-        uint8_t data;
+	uint8_t dummy;
+	uint8_t data;
 
-        I2C_TRAN;          /*SET TO TRANSMIT MODE*/
-        I2C_M_START;       /*SEND START*/
-        I2C0->D = dev;     /*send dev address (write)*/
-        I2C_WAIT           /*WAIT FOR completion*/
-       // ACK;
-        I2C0->D = reg;     /*send register address*/
-        I2C_WAIT           /*wait for completion*/
+	I2C_TRAN;          /*SET TO TRANSMIT MODE*/
+	I2C_M_START;       /*SEND START*/
+	I2C0->D = dev;     /*send dev address (write)*/
+	I2C_WAIT           /*WAIT FOR completion*/
+	// ACK;
+	I2C0->D = reg;     /*send register address*/
+	I2C_WAIT           /*wait for completion*/
 	//	ACK;
-        I2C_M_RSTART;       /*REPEATED START*/
-        I2C0->D = (dev|0x1);     /*send dev address (read)*/
-        I2C_WAIT           /*WAIT FOR completion*/
-     //   ACK;
-        I2C_REC;           /*SET TO RECEIVE MODE*/
-      //  I2C_WAIT
-        NACK;              /*SET TO NACK AFTER READ*/
+	I2C_M_RSTART;       /*REPEATED START*/
+	I2C0->D = (dev|0x1);     /*send dev address (read)*/
+	I2C_WAIT           /*WAIT FOR completion*/
+	//   ACK;
+	I2C_REC;           /*SET TO RECEIVE MODE*/
+	//  I2C_WAIT
+	NACK;              /*SET TO NACK AFTER READ*/
 
-        data = I2C0->D;    /*dummy read*/
-        I2C_WAIT           /*WAIT FOR COMPLETION*/
-        //ACK;
-        I2C_M_STOP;        /*SEND STOP*/
-        data = I2C0->D;     /*READ DATA*/
-     //   I2C_WAIT
-       // NACK;
+	data = I2C0->D;    /*dummy read*/
+	I2C_WAIT           /*WAIT FOR COMPLETION*/
+	//ACK;
+	I2C_M_STOP;        /*SEND STOP*/
+	data = I2C0->D;     /*READ DATA*/
+	//   I2C_WAIT
+	// NACK;
 
-//        I2C_M_STOP;
-        PRINTF("%d\n\r",data);
+	//        I2C_M_STOP;
+	PRINTF("%d\n\r",data);
 
-       // return data;
+	// return data;
 }
 
 #endif
@@ -194,47 +194,47 @@ void i2c_read_byte(uint8_t dev, uint8_t reg)
 void i2c_read_bytes(uint8_t dev_adx,uint8_t reg_adx,uint8_t * data, int8_t data_count)
 {
 	PRINTF("Step 1 Complete\n\r");
-        uint8_t dummy = 0;
-        uint8_t data[2];
-        int i;
-        int num_bytes_read=0;
-        I2C_TRAN             /*SET TO TRANSMIT MODE*/
-        I2C_M_START;       /*SEND START*/
-        I2C0->D = 0x90;     /*send dev address (write)*/
-        I2C_WAIT           /*WAIT FOR completion*/
-		//ACK;
+	uint8_t dummy = 0;
+	uint8_t data[2];
+	int i;
+	int num_bytes_read=0;
+	I2C_TRAN             /*SET TO TRANSMIT MODE*/
+	I2C_M_START;       /*SEND START*/
+	I2C0->D = 0x90;     /*send dev address (write)*/
+	I2C_WAIT           /*WAIT FOR completion*/
+	//ACK;
 
-        I2C0->D = (uint8_t)0x00;     /*send register address (write)*/
-        I2C_WAIT           /*WAIT FOR completion*/
-		//ACK;
-        I2C_M_RSTART;       /*REPEATED START*/
-        I2C0->D = (uint8_t)0x90|0x1;     /*send dev address (read)*/
-        I2C_WAIT           /*WAIT FOR completion*/
-		//ACK;
+	I2C0->D = (uint8_t)0x00;     /*send register address (write)*/
+	I2C_WAIT           /*WAIT FOR completion*/
+	//ACK;
+	I2C_M_RSTART;       /*REPEATED START*/
+	I2C0->D = (uint8_t)0x90|0x1;     /*send dev address (read)*/
+	I2C_WAIT           /*WAIT FOR completion*/
+	//ACK;
 
-        I2C_REC;           /*SET TO RECEIVE MODE*/
-        ACK;             /*Tell hw to send ACK after read*/
-        dummy=I2C0->D;    /*DUMMY READ TO START I2C READ*/
+	I2C_REC;           /*SET TO RECEIVE MODE*/
+	ACK;             /*Tell hw to send ACK after read*/
+	dummy=I2C0->D;    /*DUMMY READ TO START I2C READ*/
 
-        PRINTF("%d\r\n",dummy);
-        I2C_WAIT          /*WAIT FOR COMPLETION*/
-        do
-        {
-            ACK;          /*Tell hw to send ACK after read*/
-            data[num_bytes_read++] = I2C0->D; /*READ DATA*/
-            I2C_WAIT       /*WAIT FOR COMPLETION*/
-        }while (num_bytes_read < 2);
+	PRINTF("%d\r\n",dummy);
+	I2C_WAIT          /*WAIT FOR COMPLETION*/
+	do
+	{
+		ACK;          /*Tell hw to send ACK after read*/
+		data[num_bytes_read++] = I2C0->D; /*READ DATA*/
+		I2C_WAIT       /*WAIT FOR COMPLETION*/
+	}while (num_bytes_read < 2);
 
-        NACK;              /*Tell hw to send NACK after read*/
-        data[num_bytes_read++] = I2C0->D;  /*READ DATA*/
-        I2C_WAIT            /*WAIT FOR COMPLETION*/
-        I2C_M_STOP;         /*SEND STOP*/
-        for (i=0;i<2;i++)
-        {
+	NACK;              /*Tell hw to send NACK after read*/
+	data[num_bytes_read++] = I2C0->D;  /*READ DATA*/
+	I2C_WAIT            /*WAIT FOR COMPLETION*/
+	I2C_M_STOP;         /*SEND STOP*/
+	for (i=0;i<2;i++)
+	{
 
-        	PRINTF("data = %d\r\n",data[i]);
-        }
-      //  return 1;
+		PRINTF("data = %d\r\n",data[i]);
+	}
+	//  return 1;
 }
 
 #endif
@@ -242,49 +242,49 @@ void i2c_read_bytes(uint8_t dev_adx,uint8_t reg_adx,uint8_t * data, int8_t data_
 //int i2c_read_bytes(uint8_t dev_adx,uint8_t reg_adx,uint8_t * data, int8_t data_count)
 int i2c_read_bytes(uint8_t dev_adx,uint8_t reg_adx)
 {
-        uint8_t dummy;
-        //int8_t num_bytes_read=0;
-        uint8_t data_buf[2];
-        I2C_TRAN             /*SET TO TRANSMIT MODE*/
-        I2C_M_START;       /*SEND START*/
-        I2C0->D = dev_adx;     /*send dev address (write)*/
-        I2C_WAIT           /*WAIT FOR completion*/
-        I2C0->D = reg_adx;     /*send register address (write)*/
-        I2C_WAIT           /*WAIT FOR completion*/
-        I2C_M_RSTART;       /*REPEATED START*/
-        //I2C0->D = dev_adx|0x1;     /*send dev address (read)*/
-        I2C0->D = 0x91;
-        I2C_WAIT           /*WAIT FOR completion*/
+	uint8_t dummy;
+	//int8_t num_bytes_read=0;
+	uint8_t data_buf[2];
+	I2C_TRAN             /*SET TO TRANSMIT MODE*/
+	I2C_M_START;       /*SEND START*/
+	I2C0->D = dev_adx;     /*send dev address (write)*/
+	I2C_WAIT           /*WAIT FOR completion*/
+	I2C0->D = reg_adx;     /*send register address (write)*/
+	I2C_WAIT           /*WAIT FOR completion*/
+	I2C_M_RSTART;       /*REPEATED START*/
+	//I2C0->D = dev_adx|0x1;     /*send dev address (read)*/
+	I2C0->D = 0x91;
+	I2C_WAIT           /*WAIT FOR completion*/
 
-        I2C_REC;           /*SET TO RECEIVE MODE*/
-        ACK;              /*Tell hw to send ACK after read*/
-        dummy=I2C0->D;    /*DUMMY READ TO START I2C READ*/
-        I2C_WAIT          /*WAIT FOR COMPLETION*/
-		PRINTF("DUMMY=%d\n\r",dummy);
+	I2C_REC;           /*SET TO RECEIVE MODE*/
+	ACK;              /*Tell hw to send ACK after read*/
+	dummy=I2C0->D;    /*DUMMY READ TO START I2C READ*/
+	I2C_WAIT          /*WAIT FOR COMPLETION*/
+	PRINTF("DUMMY=%d\n\r",dummy);
 
-		/*  do
+	/*  do
         {
             ACK;
             data[num_bytes_read++] = I2C0->D;
             I2C_WAIT
 			PRINTF("%d\n\r",data[num_bytes_read]);
         }while (num_bytes_read < data_count-2);
-        */
-		data_buf[0] = I2C0->D;
-        I2C_WAIT
+	 */
+	data_buf[0] = I2C0->D;
+	I2C_WAIT
 
-		data_buf[1] = I2C0->D;
-        I2C_WAIT
-        NACK;              /*Tell hw to send NACK after read*/
-        //data[num_bytes_read++] = I2C0->D;  /*READ DATA*/
+	data_buf[1] = I2C0->D;
+	I2C_WAIT
+	NACK;              /*Tell hw to send NACK after read*/
+	//data[num_bytes_read++] = I2C0->D;  /*READ DATA*/
 	//	PRINTF("%d\n\r",data[num_bytes_read]);
-        I2C_M_STOP;         /*SEND STOP*/
-        PRINTF("Temperature values=")
-        PRINTF("\n\r%d",data_buf[0]);
-        PRINTF("\n\r%d\n\r",data_buf[1]);
+	I2C_M_STOP;         /*SEND STOP*/
+	PRINTF("Temperature values=");
+	PRINTF("\n\r%d",data_buf[0]);
+	PRINTF("\n\r%d\n\r",data_buf[1]);
 
-        return 1;
-       // return data;
+	return 1;
+	// return data;
 }
 
 //int temp_reading(void)
@@ -333,9 +333,9 @@ int main(void) {
 
 	PORTB->PCR[18] &=~ PORT_PCR_MUX_MASK;
 	PORTB->PCR[18] |= PORT_PCR_MUX(1);
-//	uint8_t data[2];
-//	uint8_t addr = 0x90;
-//	uint8_t temp_addr = 0x00;
+	//	uint8_t data[2];
+	//	uint8_t addr = 0x90;
+	//	uint8_t temp_addr = 0x00;
 	i2c_read_bytes(addr, temp_addr);
 
 
@@ -350,29 +350,29 @@ int main(void) {
 		j--;
 	}
 
-//	i2c_write_byte(addr,temp_high_register,Temp_high_byte2);
-//
-//	volatile int j=100000;
-//	while(j!=0)
-//	{
-//		j--;
-//	}
+	//	i2c_write_byte(addr,temp_high_register,Temp_high_byte2);
+	//
+	//	volatile int j=100000;
+	//	while(j!=0)
+	//	{
+	//		j--;
+	//	}
 
 	i2c_write_byte(addr,temp_low_register,Temp_low_byte1,Temp_low_byte2);
 
-	volatile int j=100000;
-	while(j!=0)
+	volatile int k=100000;
+	while(k!=0)
 	{
-		j--;
+		k--;
 	}
 
-//	i2c_write_byte(addr,temp_low_register,Temp_low_byte1);
-//
-//	volatile int j=100000;
-//	while(j!=0)
-//	{
-//		j--;
-//	}
+	//	i2c_write_byte(addr,temp_low_register,Temp_low_byte1);
+	//
+	//	volatile int j=100000;
+	//	while(j!=0)
+	//	{
+	//		j--;
+	//	}
 
 	i2c_write_byte(addr,config_addr,Config_byte1,Config_byte2);
 	volatile int i=100000;
@@ -380,38 +380,38 @@ int main(void) {
 	{
 		i--;
 	}
-//
-//	i2c_write_byte(addr,config_addr,Config_byte2);
-//	volatile int i=100000;
-//	while(i!=0)
-//	{
-//		i--;
-//	}
+	//
+	//	i2c_write_byte(addr,config_addr,Config_byte2);
+	//	volatile int i=100000;
+	//	while(i!=0)
+	//	{
+	//		i--;
+	//	}
 
 	int result=i2c_read_bytes(addr, config_addr);   //storing the value
-													//of alert bit in result
+	//of alert bit in result
 	PRINTF("%d",result);
-//
-//	uint8_t config_addr=0x01;
-//
-//
-//	i2c_write_byte(addr,config_addr,0x0C);
-//	i2c_write_byte(addr,config_addr,0xA0);
-//	i2c_write_byte(addr,temp_high_register,0x1E);
-//	i2c_write_byte(addr,temp_high_register,0x00);
-//
-//	ALERT;
+	//
+	//	uint8_t config_addr=0x01;
+	//
+	//
+	//	i2c_write_byte(addr,config_addr,0x0C);
+	//	i2c_write_byte(addr,config_addr,0xA0);
+	//	i2c_write_byte(addr,temp_high_register,0x1E);
+	//	i2c_write_byte(addr,temp_high_register,0x00);
+	//
+	//	ALERT;
 
 
 
 
-	if ((PTC->PDDR == (0UL << 17 ) )    //checking if port c pin connected to
-										//alert pin of tmp102 is an input pin
-	{
+	if (PTC->PDDR == (0UL << 17 ) )    //checking if port c pin connected to
+			//alert pin of tmp102 is an input pin
+			{
 		PTB->PDDR|=MASK(RED_LED);   //switching on the red led by
-									//setting the data direction register for red led
+		//setting the data direction register for red led
 		PTB->PCOR = MASK(RED_LED);
-	}
+			}
 
 
 	//i2c_read_bytes(addr, temp_addr);
@@ -426,16 +426,16 @@ int main(void) {
 	//  read[2]=i2c_read_byte(0x48,  0x00);
 	//  PRINTF("%d",read[2]);
 	/* Force the counter to be placed into memory. */
-	volatile static int i = 0 ;
+	volatile static int a = 0 ;
 	/* Enter an infinite loop, just incrementing a counter. */
 	while(1) {
-	//	i2c_read_bytes(addr, temp_addr);
+		//	i2c_read_bytes(addr, temp_addr);
 		//i2c_read_byte(0x90, 0x00);
 		//i2c_read_bytes();
-	//	i++ ;
+			a++ ;
 		/* 'Dummy' NOP to allow source level single stepping of
             tight while() loop */
-	//	__asm volatile ("nop");
+			__asm volatile ("nop");
 	}
 
 	//    __enable_irq();
