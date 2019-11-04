@@ -39,7 +39,7 @@
 #define Temp_high_byte2 0x00
 
 #define Temp_low_byte1 0x14
-#define Temp_low_byte2 0x150
+#define Temp_low_byte2 0x96
 
 #define Config_byte1 0x0C
 #define Config_byte2 0xA0
@@ -49,7 +49,7 @@
 
 
 void i2c_init(void);
-void i2c_write_byte(uint8_t dev, uint8_t reg, uint8_t data);
+void i2c_write_byte(uint8_t dev, uint8_t reg, uint8_t data_byte1,uint8_t data_byte2);
 int i2c_read_bytes(uint8_t dev_adx,uint8_t reg_adx);
 void i2c_read_byte(uint8_t dev, uint8_t reg);
 
