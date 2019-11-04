@@ -338,7 +338,11 @@ int main(void) {
 	//	uint8_t temp_addr = 0x00;
 	i2c_read_bytes(addr, temp_addr);
 
-
+	volatile int l=100000;
+	while(l!=0)
+	{
+		l--;
+	}
 	//uint8_t config_addr=0x01;
 	//uint8_t temp_high_register=0x03;
 
@@ -349,6 +353,15 @@ int main(void) {
 	{
 		j--;
 	}
+	PRINTF("\n\rTEMP_HIGH_VALUES\n\r");
+	i2c_read_bytes(addr, temp_high_register);
+
+	volatile int m=100000;
+		while(m!=0)
+		{
+			m--;
+		}
+
 
 	//	i2c_write_byte(addr,temp_high_register,Temp_high_byte2);
 	//
@@ -359,6 +372,14 @@ int main(void) {
 	//	}
 
 	i2c_write_byte(addr,temp_low_register,Temp_low_byte1,Temp_low_byte2);
+
+	volatile int n=100000;
+	while(n!=0)
+	{
+		n--;
+	}
+	PRINTF("\n\rTEMP_LOW_VALUES\n\r");
+	i2c_read_bytes(addr, temp_low_register);
 
 	volatile int k=100000;
 	while(k!=0)
