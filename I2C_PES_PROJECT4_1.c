@@ -32,17 +32,8 @@
  * @file    I2C_PES_PROJECT4_1.c
  * @brief   Application entry point.
  */
-#include <stdio.h>
-//#include <stdio.h>
-//#include <stdlib.h>
-#include <stdint.h>
-#include "board.h"
-#include "peripherals.h"
-#include "pin_mux.h"
-#include "clock_config.h"
-#include "MKL25Z4.h"
-//#include "i2c.h"
-#include "fsl_debug_console.h"
+
+#include "I2C_PES_PROJECT4_1.h"
 /* TODO: insert other include files here. */
 
 /* TODO: insert other definitions and declarations here. */
@@ -52,19 +43,7 @@
  */
 
 
-#define I2C_M_START   I2C0->C1 |= I2C_C1_MST_MASK
-#define I2C_M_STOP    I2C0->C1 &= ~I2C_C1_MST_MASK
-#define I2C_M_RSTART  I2C0->C1 |= I2C_C1_RSTA_MASK
 
-#define I2C_TRAN      I2C0->C1 |= I2C_C1_TX_MASK;
-#define I2C_REC       I2C0->C1 &= ~I2C_C1_TX_MASK;
-
-#define I2C_WAIT      while((I2C0->S & I2C_S_IICIF_MASK)==0) {} \
-					I2C0->S |= I2C_S_IICIF_MASK;
-
-
-#define NACK  I2C0->C1 |= I2C_C1_TXAK_MASK
-#define ACK   I2C0->C1 &= ~I2C_C1_TXAK_MASK
 //#define ALERT I2C0->SMB= I2C0->SMB |= I2C_SMB_ALERTEN_MASK
 
 void i2c_init(void)
@@ -73,14 +52,18 @@ void i2c_init(void)
 	SIM->SCGC4 |= SIM_SCGC4_I2C0_MASK;
 	SIM->SCGC5 |= SIM_SCGC5_PORTC_MASK;
 
-	//set pins to i2c function
+	//set pins to i2c function and choose the pin to perform i2c
+	//function as sda and sclk
 	PORTC ->PCR[8] |= PORT_PCR_MUX(2);
 	PORTC->PCR[9] |= PORT_PCR_MUX(2);
 
 
 //
-//	PORTC->PCR[16] |=  PORT_PCR_MUX(1);
-//	PORTC->PCR[16] |= PORT_PCR_PS_MASK;
+	PORTC->PCR[16] |=  PORT_PCR_MUX(1);
+	PORTC->PCR[16] |= PORT_PCR_PE_MASK;
+	PORTC->PCR[16] |= PORT_PCR_PS_MASK;
+
+    PORTC->PCR[16] |= 	GPIO_PDDR_PDD(0);
 //	FGPIO_PDDR_PDD(16);
 
 	//set to 400k baud
@@ -100,7 +83,7 @@ void i2c_init(void)
 
 }
 
-void i2c_write_byte(uint8_t dev, uint8_t reg, uint8_t data)
+void i2c_write_byte(uint8_t dev, uint8_t reg, uint8_t data_byte1,uint8_t data_byte2)
 {
         I2C_TRAN;          /*SET TO TRANSMIT MODE*/
         I2C_M_START;       /*SEND START*/
@@ -110,8 +93,12 @@ void i2c_write_byte(uint8_t dev, uint8_t reg, uint8_t data)
         I2C0->D = reg;     /*send register address*/
         I2C_WAIT;
 
-        I2C0->D = data;    /*send data*/
+        I2C0->D = data_byte1;    /*send data byte 1*/
         I2C_WAIT;
+
+        I2c0->D = data_byte2;    /*send data byte 2*/
+        I2C_WAIT;
+
         I2C_M_STOP;
 }
 
@@ -165,6 +152,8 @@ void i2c_write_byte(uint8_t dev, uint8_t reg, uint8_t data)
 //	PRINTF("%d",data[2]);
 //	//   return data;
 //}
+
+#if 0
 void i2c_read_byte(uint8_t dev, uint8_t reg)
 {
 		uint8_t dummy;
@@ -199,6 +188,8 @@ void i2c_read_byte(uint8_t dev, uint8_t reg)
 
        // return data;
 }
+
+#endif
 #if 0
 void i2c_read_bytes(uint8_t dev_adx,uint8_t reg_adx,uint8_t * data, int8_t data_count)
 {
@@ -288,8 +279,9 @@ int i2c_read_bytes(uint8_t dev_adx,uint8_t reg_adx)
         //data[num_bytes_read++] = I2C0->D;  /*READ DATA*/
 	//	PRINTF("%d\n\r",data[num_bytes_read]);
         I2C_M_STOP;         /*SEND STOP*/
+        PRINTF("Temperature values=")
         PRINTF("\n\r%d",data_buf[0]);
-        PRINTF("\n\r%d",data_buf[1]);
+        PRINTF("\n\r%d\n\r",data_buf[1]);
 
         return 1;
        // return data;
@@ -336,18 +328,72 @@ int main(void) {
 	//   int read[3];
 	PRINTF("Hello World\n");
 	i2c_init();
-	uint8_t data[2];
-	uint8_t addr = 0x90;
-	uint8_t temp_addr = 0x00;
+
+	SIM->SCGC5 |= SIM_SCGC5_PORTB_MASK;
+
+	PORTB->PCR[18] &=~ PORT_PCR_MUX_MASK;
+	PORTB->PCR[18] |= PORT_PCR_MUX(1);
+//	uint8_t data[2];
+//	uint8_t addr = 0x90;
+//	uint8_t temp_addr = 0x00;
 	i2c_read_bytes(addr, temp_addr);
 
 
+	//uint8_t config_addr=0x01;
+	//uint8_t temp_high_register=0x03;
 
+	i2c_write_byte(addr,temp_high_register,Temp_high_byte1,Temp_high_byte2);
 
+	volatile int j=100000;
+	while(j!=0)
+	{
+		j--;
+	}
 
+//	i2c_write_byte(addr,temp_high_register,Temp_high_byte2);
+//
+//	volatile int j=100000;
+//	while(j!=0)
+//	{
+//		j--;
+//	}
+
+	i2c_write_byte(addr,temp_low_register,Temp_low_byte1,Temp_low_byte2);
+
+	volatile int j=100000;
+	while(j!=0)
+	{
+		j--;
+	}
+
+//	i2c_write_byte(addr,temp_low_register,Temp_low_byte1);
+//
+//	volatile int j=100000;
+//	while(j!=0)
+//	{
+//		j--;
+//	}
+
+	i2c_write_byte(addr,config_addr,Config_byte1,Config_byte2);
+	volatile int i=100000;
+	while(i!=0)
+	{
+		i--;
+	}
+//
+//	i2c_write_byte(addr,config_addr,Config_byte2);
+//	volatile int i=100000;
+//	while(i!=0)
+//	{
+//		i--;
+//	}
+
+	int result=i2c_read_bytes(addr, config_addr);   //storing the value
+													//of alert bit in result
+	PRINTF("%d",result);
 //
 //	uint8_t config_addr=0x01;
-//	uint8_t temp_high_register=0x03;
+//
 //
 //	i2c_write_byte(addr,config_addr,0x0C);
 //	i2c_write_byte(addr,config_addr,0xA0);
@@ -359,9 +405,13 @@ int main(void) {
 
 
 
-
-
-
+	if ((PTC->PDDR == (0UL << 17 ) )    //checking if port c pin connected to
+										//alert pin of tmp102 is an input pin
+	{
+		PTB->PDDR|=MASK(RED_LED);   //switching on the red led by
+									//setting the data direction register for red led
+		PTB->PCOR = MASK(RED_LED);
+	}
 
 
 	//i2c_read_bytes(addr, temp_addr);
@@ -379,13 +429,13 @@ int main(void) {
 	volatile static int i = 0 ;
 	/* Enter an infinite loop, just incrementing a counter. */
 	while(1) {
-		i2c_read_bytes(addr, temp_addr);
+	//	i2c_read_bytes(addr, temp_addr);
 		//i2c_read_byte(0x90, 0x00);
 		//i2c_read_bytes();
-		i++ ;
+	//	i++ ;
 		/* 'Dummy' NOP to allow source level single stepping of
             tight while() loop */
-		__asm volatile ("nop");
+	//	__asm volatile ("nop");
 	}
 
 	//    __enable_irq();
