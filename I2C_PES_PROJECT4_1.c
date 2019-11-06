@@ -126,8 +126,8 @@ int i2c_read_bytes(uint8_t dev_adx,uint8_t reg_adx,int CR)
     {
         nack_f=1;
         int disconnect8=Handle_Disconnect();   //going into the disconnected state
-        if (disconnect8==0)
-        {return 0;}
+        if (disconnect8==1)
+        {return 1;}
 
 
     }
@@ -149,8 +149,10 @@ int i2c_read_bytes_post(uint8_t dev_adx,uint8_t reg_adx,int CR)
 
 if (noack_f==1)
 {
-	Handle_Disconnect();
-	return 0;
+	int disconnect9=Handle_Disconnect();
+    if (disconnect9==1)
+    {return 1;}
+
 }
 
     I2C0->D = reg_adx;     /*send register address (write)*/
@@ -166,8 +168,10 @@ if (noack_f==1)
     data_buf[0] = I2C0->D;    /*DUMMY READ TO START I2C READ*/
     if (data_buf[0]==0)
     {
-    	Handle_Disconnect();
-    	return 0;
+    	int disconnect10=Handle_Disconnect();
+        if (disconnect10==1)
+        {return 1;}
+
     }
     WAIT2   ;       		/*WAIT FOR COMPLETION*/
 
@@ -196,20 +200,7 @@ if (noack_f==1)
     return data_buf[0];
 
 }
-//int Handle_Disconnect()
-//{
-////	log_Handle_Disconnect();
-//    if (db_f == 1)                    //check for debug flag to glow the leds
-//    {
-//        blink(1,10000);               //blink the red led for disconnected state
-//    }
-// //   log_blink_led(1);
-//  //  log_Handle_Disconnect();
-//    PRINTF("\n\n\r--------------------------------- Sensor Disconnected-----------------------\n\n\r ");
-//    exit(0);
-//
-//
-//}
+
 
 void wait_to_complete(void)
 {
@@ -239,14 +230,6 @@ int main(void)
 
 
 
-//
-//    if (PTA->PDDR == (0UL << 4 ) )    //checking if port c pin connected to
-//        //alert pin of tmp102 is an input pin
-//    {
-//        PTB->PDDR|=MASK(RED_LED);   //switching on the red led by
-//        //setting the data direction register for red led
-//        PTB->PCOR = MASK(RED_LED);
-//    }
 
 
     //////////////////////////state machine 1///////////////////////////////////////////////
@@ -254,7 +237,7 @@ int main(void)
 
     int state_machine_test=state_machines();     //go to state machine logic
 
-    if (state_machine_test==0)
+    if (state_machine_test==1)
     {PRINTF("\n\n\r--------------------------------- Sensor Disconnected-----------------------\n\n\r ");}
 
 
@@ -262,7 +245,7 @@ int main(void)
     NVIC->ICPR[4] |= 1<<PORTA_IRQn ;  //enable irq for porta which works as a gpio and toggles the blue led
     NVIC->ISER[4] |= 1<<PORTA_IRQn ;
 //    NVIC_EnableIRQ(IRQn)
-    return(0) ;
+    return 0 ;
 }
 
 void PORTA_IRQHandler (void)

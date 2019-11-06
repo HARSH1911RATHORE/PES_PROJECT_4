@@ -25,8 +25,8 @@ int Handle_Temp_Read()
     int temperature_read=i2c_read_bytes(addr,temp_addr,0);
 
 
-    if (temperature_read==0)
-    {return 0;}
+    if (temperature_read==1)
+    {return 1;}
 
     log_Handle_Temp_Read(temperature_read);
 
@@ -67,8 +67,8 @@ int Handle_Average_Wait()
 
 
     data[timeout_val]=i2c_read_bytes(addr,temp_addr,0);    //put the data into an array to perform average
-    if (data[timeout_val]==0)
-    {return 0;}
+    if (data[timeout_val]==1)
+    {return 1;}
 
     current_data=data[timeout_val];
     if (AVERAGE==0)
@@ -120,8 +120,8 @@ int Handle_Temperature_Alert()
 	log_Handle_Temperature_Alert();
 	i2c_read_bytes(addr,config_addr,0);
 	int alert_check=i2c_read_bytes(addr,config_addr,1);
-    if (alert_check==0)
-    {return 0;}
+    if (alert_check==1)
+    {return 1;}
 
         	      //RESET the alert Flag
     if (nack_f == 1)      //Disconnected
@@ -157,7 +157,7 @@ int Handle_Disconnect()
  //   log_blink_led(1);
   //  log_Handle_Disconnect();
     PRINTF("\n\n\r--------------------------------- Sensor Disconnected-----------------------\n\n\r ");
-    return 0;
+    return 1;
 
 
 }
@@ -167,8 +167,8 @@ int POST()
 	log_POST(1);
 	int post_disc=i2c_read_bytes_post(addr, temp_addr, 2);
 
-	if (post_disc==0)
-	{return 0;}
+	if (post_disc==1)
+	{return 1;}
 
     if (nack_f == 0)
     {
@@ -189,8 +189,8 @@ int POST()
     else
     {
         int disconnect7= Handle_Disconnect();  //go to disconnect function
-        if (disconnect7==0)
-        return 0;
+        if (disconnect7==1)
+        return 1;
     }
     PRINTF("\n\rTemperature values=");
     i2c_read_bytes(addr, temp_addr,0);
@@ -244,8 +244,8 @@ int state_machines()
 {
 
     int post_value=POST();
-    if (post_value==0)
-    {return 0;}
+    if (post_value==1)
+    {return 1;}
 
     //  State_Machine_1:                     //state machine 1 label
     while(1)
@@ -273,8 +273,8 @@ int state_machines()
             	log_state_machines(1);
              //   PRINTF("\n\r The sensor is in TEMP_READ STATE\n\r");
                 int st_tempread=Handle_Temp_Read();
-                if (st_tempread==0)
-                {return 0;}
+                if (st_tempread==1)
+                {return 1;}
 
                 					//    Read temperature here and set flags
                 if (db_f == 1)
@@ -346,8 +346,8 @@ int state_machines()
                 log_state_machines(2);
                 //PRINTF("\n\r The sensor is in AVERAGE_WAIT STATE\n\r");
                 int st_average_wait=Handle_Average_Wait();
-                if (st_average_wait==0)
-                {return 0;}
+                if (st_average_wait==1)
+                {return 1;}
                 if (nack_f == 1)      //Disconnected
                 {
                     Current_state_SM1 = DISCONNECT;
@@ -394,8 +394,8 @@ int state_machines()
                 log_state_machines(3);
               //  PRINTF("\n\r The sensor is in TEMP_ALERT STATE\n\r");
                 int st_temp_alert=Handle_Temperature_Alert();
-                if (st_temp_alert==0)
-                {return 0;}
+                if (st_temp_alert==1)
+                {return 1;}
                 al_f =0;     	      //RESET the alert Flag
                 if (nack_f == 1)      //Disconnected
                 {
@@ -437,8 +437,8 @@ int state_machines()
                     blink(0,1000);
                 }
                 int disconnect2= Handle_Disconnect();  //go to disconnect function
-                if (disconnect2==0)
-                return 0;
+                if (disconnect2==1)
+                return 1;
                 break;
             }
 
@@ -464,8 +464,8 @@ int state_machines()
             	log_state_machines(5);
                 //PRINTF("\n \n\rWe are in Temperature read state\n\r");
                 int st_temp=Handle_Temp_Read();
-                if (st_temp==0)
-                {return 0;}
+                if (st_temp==1)
+                {return 1;}
                 if (db_f == 1)           //check for the debug status and blink led
                 {
                     blink(1,1000);
@@ -473,8 +473,8 @@ int state_machines()
                 if (nack_f==1)            //check for no ack in the read function and got to disconnect
                 {
                     int disconnect3= Handle_Disconnect();  //go to disconnect function
-                    if (disconnect3==0)
-                    return 0;
+                    if (disconnect3==1)
+                    return 1;
 
 
                 }
@@ -485,8 +485,8 @@ int state_machines()
             	log_state_machines(6);
                 //PRINTF("\n\n\r We are in Temperature Wait Average state\n\r");
                 int st_wait=Handle_Average_Wait();
-                if (st_wait==0)
-                {return 0;}
+                if (st_wait==1)
+                {return 1;}
                 if (db_f == 1)         //check for the debug status and blink led
                 {
                     blink(1,1000);
@@ -494,8 +494,8 @@ int state_machines()
                 if (nack_f==1)      //check for no ack in the read function and go to disconnect
                 {
                     int disconnect4= Handle_Disconnect();  //go to disconnect function
-                    if (disconnect4==0)
-                    return 0;
+                    if (disconnect4==1)
+                    return 1;
 
                 }
 
@@ -505,8 +505,8 @@ int state_machines()
             	log_state_machines(7);
                 //PRINTF("\n\r We are in Temperature Temperature Alert state\n\r");
                 int st_alert=Handle_Temperature_Alert();
-                if (st_alert==0)
-                	{return 0;}
+                if (st_alert==1)
+                	{return 1;}
                 if (db_f == 1)      //check for the debug status and blink led
                 {
                     blink(2,1000);
@@ -514,8 +514,8 @@ int state_machines()
                 if (nack_f==1)    //check for no ack in the read function and go to disconnect
                 {
                     int disconnect5= Handle_Disconnect();  //go to disconnect function
-                    if (disconnect5==0)
-                    return 0;
+                    if (disconnect5==1)
+                    return 1;
 
                 }
 
@@ -524,9 +524,9 @@ int state_machines()
             {
            //     PRINTF("\n\n\r We are in Disconnect state\n\r");
                 int disconnect6= Handle_Disconnect();  //go to disconnect function
-                if (disconnect6==0)
-                return 0;  //go to disconnect function
-//                if (disconnect==0)
+                if (disconnect6==1)
+                return 1;  //go to disconnect function
+//                if (disconnect==1)
 //                return 3;
 //                if (db_f == 1)        //check for the debug status and blink led
 //                {
@@ -535,7 +535,7 @@ int state_machines()
 //                if (nack_f==1)     //check for no ack in the read function and go to disconnect
 //                {
 //                    Handle_Disconnect();
-//                    return 0;
+//                    return 1;
 //                }
 
             }
