@@ -2,62 +2,7 @@
 
 
 
-//void logger(log_level level,function_type function)
-//{
-//
-//
-//	void blink(int LED_no, int delay_counter);
-//	void Handle_Temp_Read();
-//	void Handle_Average_Wait();
-//	void Handle_Temperature_Alert();
-//	void Handle_Disconnect();
-//	void POST();
-//	void state_machines();
-//	void i2c_write_byte(uint8_t dev, uint8_t reg, uint8_t data_byte1,uint8_t data_byte2);
-//	int i2c_read_bytes(uint8_t dev_adx,uint8_t reg_adx,int CR);
-//	switch(level)
-//	{
-//	case(status):{switch(function){
-//
-//	case(blink_led):{}
-//	case(Handle_Temperature_Read):{}
-//	case(Handle_Avg_Wait):{}
-//	case(Handle_Temp_Alert):{}
-//	case(Handle_Disc):{}
-//	case(Power_start):{}
-//	case(state_machines):{}
-//	case(i2c_write):{}
-//	case(i2c_read):{}
-//	};
-//	break;}
-//	}
-//
-//	case(test):{switch(function){case():{}
-//
-//	case():{}
-//	case():{}
-//	case():{}
-//	case():{}
-//	case():{}
-//	case():{}
-//	case():{}
-//	case():{}
-//	}break;}
-//
-//	case(debug):{switch(function){case():{}
-//
-//	case():{}
-//	case():{}
-//	case():{}
-//	case():{}
-//	case():{}
-//	case():{}
-//	case():{}
-//	case():{}
-//	case():{}
-//	}break;}
-//	}
-//}
+
 void log_i2c_read_bytes(int config,int data_buf[3])
 {
 
@@ -78,8 +23,7 @@ void log_blink_led(int check_led)
 {
 	if (check_led==1)
 	PRINTF("\n\rBLINK RBG LEDS\n\r\n\r");
-//	else if (check_led==2)
-//	PRINTF("\n\rBLINK  LED\n\r\n\r");)
+
 }
 void log_Handle_Temp_Read(int temperature_read)
 {

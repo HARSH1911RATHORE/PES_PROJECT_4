@@ -5,10 +5,13 @@
 #include "uCUnit.h"
 #include "state_machine.h"
 #include "system.h"
+#include "logger.h"
+#include "led.h"
 
 
 int noack_f=0;
 static volatile int counter2=0;
+static volatile uint8_t threshold_temp_reading=27;
 
 
 void i2c_init(void)
@@ -29,22 +32,20 @@ void i2c_init(void)
     PORTA->PCR[4] |= PORT_PCR_PE_MASK;  //pull up enable for alert pin
     PORTA->PCR[4] |= PORT_PCR_PS_MASK;
 
-    //PORTA->ISFR &=~PORT_ISFR_ISF(4);
-    PORTA->PCR[4] |= PORT_PCR_IRQC(0x0B);		//interrupt at either edge
-    // PORTA->ISFR &=~PORT_ISFR_ISF(0x10);
 
-    //PORTA->PCR[5] |= 	GPIO_PDDR_PDD(0);
-    //set to 400k baud
-    //baud= bus freq/(scl_div+mul)
-    //24MHz/400kHz = 60; icr=0x11 sets scl_div to 56
+    PORTA->PCR[4] |= PORT_PCR_IRQC(0x0B);		//interrupt at either edge
+
+    						//set to 400k baud
+    							//baud= bus freq/(scl_div+mul)
+    						//24MHz/400kHz = 60; icr=0x11 sets scl_div to 56
     I2C0->F = I2C_F_ICR(0x11) | I2C_F_MULT(0);
 
-    //enable i2c and set to master mode
+    						//enable i2c and set to master mode
     I2C0->C1 |= (I2C_C1_IICEN_MASK);
 
-    //select high drive mode
+    							//select high drive mode
     I2C0->C2 |= (I2C_C2_HDRS_MASK);
-    //setting bit for timeout
+    							//setting bit for timeout
     I2C0->SLTH = I2C_SLTL_SSLT(0x01);
 
 
@@ -74,14 +75,9 @@ void i2c_write_byte(uint8_t dev, uint8_t reg, uint8_t data_byte1,uint8_t data_by
 
 
 
-
-
-
-
-
 int i2c_read_bytes(uint8_t dev_adx,uint8_t reg_adx,int CR)
 {
-    uint8_t data_buf[3];  /*take an array of 3 elements to store the data values*/
+    int8_t data_buf[3];  /*take an array of 3 elements to store the data values*/
     I2C_TRAN;             /*SET TO TRANSMIT MODE*/
     I2C_M_START;       /*SEND START*/
     I2C0->D = dev_adx;     /*send dev address (write)*/
@@ -98,6 +94,7 @@ int i2c_read_bytes(uint8_t dev_adx,uint8_t reg_adx,int CR)
     I2C_REC;           /*SET TO RECEIVE MODE*/
     ACK;              /*Tell hw to send ACK after read*/
     data_buf[0] = I2C0->D;    /*DUMMY READ TO START I2C READ*/
+
     I2C_WAIT   ;       		/*WAIT FOR COMPLETION*/
 
 
@@ -111,29 +108,31 @@ int i2c_read_bytes(uint8_t dev_adx,uint8_t reg_adx,int CR)
 
     I2C_M_STOP;         /*SEND STOP*/
 
-    //log_i2c_read_bytes();
+
 
 
     if (CR==0)          /*check if it is a configuration byte read and print the value of
      	 	 	 	 	 	 	 	 	 desired byte*/
-    //	log_i2c_read_bytes(0,data_buf[0]);
-      PRINTF("\n\r%d",data_buf[0]);
+        //	log_i2c_read_bytes(0,data_buf[0]);
+        PRINTF("\n\r%d",data_buf[0]);
     else if(CR==1)
-    //	log_i2c_read_bytes(1,data_buf[1]);
+        //	log_i2c_read_bytes(1,data_buf[1]);
         PRINTF("\n\r%d\n\r",data_buf[1]);
 
-    if (data_buf[0]==144 && data_buf[0]==255)  //checking for disconnected state
+    if (data_buf[0]>100 || data_buf[0]<-50)  //checking for disconnected state
     {
         nack_f=1;
         int disconnect8=Handle_Disconnect();   //going into the disconnected state
         if (disconnect8==1)
-        {return 1;}
+        {
+            return 1;
+        }
 
 
     }
-    if (data_buf[1]==128)
+    if (data_buf[0]>threshold_temp_reading)
     {
-    	al_f =1;
+        al_f =1;
     }
     return data_buf[0];
 
@@ -141,19 +140,21 @@ int i2c_read_bytes(uint8_t dev_adx,uint8_t reg_adx,int CR)
 
 int i2c_read_bytes_post(uint8_t dev_adx,uint8_t reg_adx,int CR)
 {
-    uint8_t data_buf[3];  /*take an array of 3 elements to store the data values*/
+    int8_t data_buf[3];  /*take an array of 3 elements to store the data values*/
     I2C_TRAN;             /*SET TO TRANSMIT MODE*/
     I2C_M_START;       /*SEND START*/
     I2C0->D = dev_adx;     /*send dev address (write)*/
     WAIT2;           /*WAIT FOR completion*/
 
-if (noack_f==1)
-{
-	int disconnect9=Handle_Disconnect();
-    if (disconnect9==1)
-    {return 1;}
+    if (noack_f==1)
+    {
+        int disconnect9=Handle_Disconnect();
+        if (disconnect9==1)
+        {
+            return 1;
+        }
 
-}
+    }
 
     I2C0->D = reg_adx;     /*send register address (write)*/
     WAIT2;          /*WAIT FOR completion*/
@@ -168,9 +169,11 @@ if (noack_f==1)
     data_buf[0] = I2C0->D;    /*DUMMY READ TO START I2C READ*/
     if (data_buf[0]==0)
     {
-    	int disconnect10=Handle_Disconnect();
+        int disconnect10=Handle_Disconnect();
         if (disconnect10==1)
-        {return 1;}
+        {
+            return 1;
+        }
 
     }
     WAIT2   ;       		/*WAIT FOR COMPLETION*/
@@ -186,15 +189,15 @@ if (noack_f==1)
 
     I2C_M_STOP;         /*SEND STOP*/
 
-    //log_i2c_read_bytes();
+
 
 
     if (CR==0)          /*check if it is a configuration byte read and print the value of
      	 	 	 	 	 	 	 	 	 desired byte*/
-    //	log_i2c_read_bytes(0,data_buf[0]);
-      PRINTF("\n\r%d",data_buf[0]);
+        //	log_i2c_read_bytes(0,data_buf[0]);
+        PRINTF("\n\r%d",data_buf[0]);
     else if(CR==1)
-    //	log_i2c_read_bytes(1,data_buf[1]);
+        //	log_i2c_read_bytes(1,data_buf[1]);
         PRINTF("\n\r%d\n\r",data_buf[1]);
 
     return data_buf[0];
@@ -228,23 +231,21 @@ int main(void)
 
     i2c_init();    //go to i2c init function
 
-
-
-
-
     //////////////////////////state machine 1///////////////////////////////////////////////
 
 
     int state_machine_test=state_machines();     //go to state machine logic
 
     if (state_machine_test==1)
-    {PRINTF("\n\n\r--------------------------------- Sensor Disconnected-----------------------\n\n\r ");}
+    {
+        PRINTF("\n\n\r--------------------------------- Sensor Disconnected-----------------------\n\n\r ");
+    }
 
 
     __enable_irq();
     NVIC->ICPR[4] |= 1<<PORTA_IRQn ;  //enable irq for porta which works as a gpio and toggles the blue led
     NVIC->ISER[4] |= 1<<PORTA_IRQn ;
-//    NVIC_EnableIRQ(IRQn)
+
     return 0 ;
 }
 

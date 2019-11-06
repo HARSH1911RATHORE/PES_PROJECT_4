@@ -49,12 +49,8 @@
 #define Temp_low_byte2 0x00
 
 
-
 #define Config_byte1 0x6C
 #define Config_byte2 0xA0
-
-//#define MASK(x)    (1UL << (x))
-//#define RED_LED    18
 
 
 void i2c_init(void);

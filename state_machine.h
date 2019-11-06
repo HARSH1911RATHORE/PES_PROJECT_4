@@ -75,9 +75,20 @@ int Handle_Temp_Read();
 int Handle_Average_Wait();
 int Handle_Temperature_Alert();
 int Handle_Disconnect();
+void wait_to_complete(void);
+
+void log_blink_led(int check_led);
+//void log_Handle_Temp_Read(int temperature_read);
+void log_Handle_Average_Wait(int8_t current_data,int8_t AVERAGE);
+void log_Handle_Disconnect();
+void log_POST(int check_post);
+void log_state_machines(int check_state_machine);
+void log_next_line();
+void log_i2c_write_bytes();
+void log_Handle_Temp_Read(int temperature_read);
 
 int POST();
-//void log_state_machines(enum state_machines_log status);
+
 
 
 #endif
