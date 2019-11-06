@@ -130,6 +130,17 @@ int i2c_read_bytes(uint8_t dev_adx,uint8_t reg_adx,int CR)
 
 
     }
+    if(data_buf[1] ==128 || data_buf[1] ==-128  )               //checking alert condition
+    {
+
+    	 al_f =1;
+
+         if (db_f == 1)
+         {
+             blink(2,1000);
+         }                                          //blue led blink
+    }
+
     if (data_buf[0]>threshold_temp_reading)
     {
         al_f =1;
