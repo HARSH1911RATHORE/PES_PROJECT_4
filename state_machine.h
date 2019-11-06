@@ -4,7 +4,7 @@
 
 #include<stdlib.h>
 #include <stdio.h>
-#include "I2C_PES_PROJECT4_1.h"
+
 #include <stdint.h>
 #include "board.h"
 #include "peripherals.h"
@@ -13,6 +13,14 @@
 #include "fsl_common.h"
 #include "MKL25Z4.h"
 #include <fsl_debug_console.h>
+#include "I2C_PES_PROJECT4_1.h"
+#include "uCUnit.h"
+#include "system.h"
+#include "logger.h"
+#include "led.h"
+
+
+
 
 typedef enum
 {
@@ -46,13 +54,13 @@ struct sStateTableEntry
 
 
 
-static volatile int ut_f = 0;
+static volatile int ut_f = 1;
 
 static volatile int db_f = 1;
 
 //#define ALERT I2C0->SMB= I2C0->SMB |= I2C_SMB_ALERTEN_MASK
 //Global Flag Declarations
-static volatile int counter2=0;
+
 static volatile int l_f = 0;                    //Logger Flag , Set when logger is on or enable
 static volatile int sm_f = 0;					//State Machine Flag    0 when State machine 1 , 1 when state machine 2
 static volatile int al_f = 0;					//Alert flag            1 when temperature under threshold
@@ -60,15 +68,16 @@ static volatile int nack_f = 0;					//No_Acknowledgment Flag  default 0   , set 
 static volatile int timeout_val =1;             //value of timeout
 
 
-
+int state_machines();
 void delay(volatile int32_t number);
 void blink(int LED_no, int delay_counter);
-void Handle_Temp_Read();
-void Handle_Average_Wait();
-void Handle_Temperature_Alert();
-void Handle_Disconnect();
-void POST();
-void state_machines();
+int Handle_Temp_Read();
+int Handle_Average_Wait();
+int Handle_Temperature_Alert();
+int Handle_Disconnect();
+
+int POST();
+//void log_state_machines(enum state_machines_log status);
 
 
 #endif

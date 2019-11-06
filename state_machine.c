@@ -1,7 +1,6 @@
 #include "state_machine.h"
-#include "I2C_PES_PROJECT4_1.h"
-#include "uCUnit.h"
-#include "system.h"
+#include<stdlib.h>
+
 
 struct sStateTableEntry stateTable[]=
 {
@@ -11,68 +10,43 @@ struct sStateTableEntry stateTable[]=
     {DISCONNECT, dont_care, dont_care, dont_care, dont_care, dont_care},	//Disconnect
 };
 
+int8_t AVERAGE=0;
+static int count_avg=0;
 int timeout_delay = 2000;     						//1 sec
 int Prev_temp = 25;								//stores the last value of temperature to average
 state_SM1 Current_state_SM1;
 state_SM1 Current_state_SM2;
 
-void delay(volatile int32_t number)
-{
-
-    int multiplier = 4000;               //for the Mhz system clock
-    int delay = number*multiplier;
-    while (delay!=0)                    //perform desired delay with the following loop
-    {
-        __asm volatile ("nop");
-        delay--;
-    }
-}
 
 
-void blink(int LED_no, int delay_counter)
-{
 
-
-    if (LED_no==0)              //LED is Red
-    {
-        LED_RED_ON();
-        delay(delay_counter);   //give a delay to the led
-        LED_RED_OFF();
-    }
-
-    if (LED_no==1)               //LED is Green
-    {
-        LED_GREEN_ON();
-        delay(delay_counter);    //give a delay to the led
-        LED_GREEN_OFF();
-    }
-
-    if (LED_no==2)               //LED is Blue
-    {
-        LED_BLUE_ON();
-        delay(delay_counter);  //give a delay to the led
-        LED_BLUE_OFF();
-    }
-}
-
-
-void Handle_Temp_Read()
+int Handle_Temp_Read()
 {
     int temperature_read=i2c_read_bytes(addr,temp_addr,0);
 
-    PRINTF("\n\r TEMPERATURE READ=%d\n\r",temperature_read);
+
+    if (temperature_read==0)
+    {return 0;}
+
+    log_Handle_Temp_Read(temperature_read);
+
+  //  PRINTF("\n\r TEMPERATURE READ=%d",temperature_read);
 
     if (nack_f == 1)      //Disconnected
     {
         Current_state_SM2 = stateTable[3].CURRENT_STATE;
-        PRINTF("\n\r");
+        log_next_line();
+       // PRINTF("\n\r");
         if (ut_f==1)                 //check for the unit test flag
         {
-            PRINTF("\n\r");
+        	log_next_line();
+        //    PRINTF("\n\r");
             UCUNIT_CheckIsEqual(nack_f,1);  //perform unit test
-            PRINTF("\n\r");
+            log_next_line();
+         //   PRINTF("\n\r");
         }
-        PRINTF("\n\r");
+        log_next_line();
+      //  PRINTF("\n\r");
     }
     if (al_f == 1)        //Temperature Alert
     {
@@ -85,90 +59,121 @@ void Handle_Temp_Read()
 }
 
 
-void Handle_Average_Wait()
+int Handle_Average_Wait()
 {
-    int i;
-    int sum=0;
-    int average;
-    int data[5];
+
+    int8_t data[4];
+    int8_t current_data;
 
 
     data[timeout_val]=i2c_read_bytes(addr,temp_addr,0);    //put the data into an array to perform average
+    if (data[timeout_val]==0)
+    {return 0;}
 
-
-
-    for (i=0; i<=timeout_val; i++)
+    current_data=data[timeout_val];
+    if (AVERAGE==0)
     {
-        sum=sum+data[i];
-        //     PRINTF("\n\rSUM=%d",sum);
+    	AVERAGE=data[timeout_val];
     }
-    average=(float)sum/(timeout_val+1);
-    PRINTF("\n\rCURRENT TEMPERATURE=%d\n\r",data[timeout_val]);
-    PRINTF("\n\rAVERAGE TEMPERATURE=%f\n\r",average);
+    else if (AVERAGE!=0)
+    {
+    	AVERAGE=(AVERAGE+data[timeout_val])/2;
+    }
+
+    log_Handle_Average_Wait(current_data,AVERAGE);
+
+ //   PRINTF("\n\rCURRENT TEMPERATURE=%d\n\r",data[timeout_val]);
+ //   PRINTF("\n\rAVERAGE TEMPERATURE=%d\n\r",AVERAGE);
 
 
     if (nack_f == 1)      //Disconnected
     {
         Current_state_SM2 = stateTable[3].CURRENT_STATE;
-        PRINTF("\n\r");
+        log_next_line();
+        //PRINTF("\n\r");
         if (ut_f==1)						//check for the unit test flag
         {
-            PRINTF("\n\r");
+        	 log_next_line();
+           // PRINTF("\n\r");
             UCUNIT_CheckIsEqual(nack_f,1);  //perform unit test
-            PRINTF("\n\r");
+            log_next_line();
+//            PRINTF("\n\r");
         }
-        PRINTF("\n\r");
+        log_next_line();
+       // PRINTF("\n\r");
     }
     else					//Temperature read operation
     {
         Current_state_SM2 = stateTable[0].CURRENT_STATE;
         timeout_val++;
+        if (timeout_val==4)
+        {
+        	count_avg=0;
+        }
         delay(timeout_delay);
     }
 
 }
 
-void Handle_Temperature_Alert()
+int Handle_Temperature_Alert()
 {
-    al_f =0;     	      //RESET the alert Flag
+	log_Handle_Temperature_Alert();
+	i2c_read_bytes(addr,config_addr,0);
+	int alert_check=i2c_read_bytes(addr,config_addr,1);
+    if (alert_check==0)
+    {return 0;}
+
+        	      //RESET the alert Flag
     if (nack_f == 1)      //Disconnected
     {
         Current_state_SM2 = stateTable[3].CURRENT_STATE;
-        PRINTF("\n\r");
+        log_next_line();
+        //PRINTF("\n\r");
         if (ut_f==1)
         {
-            PRINTF("\n\r");
+        	 log_next_line();
+           // PRINTF("\n\r");
             UCUNIT_CheckIsEqual(nack_f,1); //check for the unit test flag
-            PRINTF("\n\r");
+            log_next_line();
+           // PRINTF("\n\r");
         }
-        PRINTF("\n\r");
+        log_next_line();
+       // PRINTF("\n\r");
     }
     else
     {
+    	al_f =0;
         Current_state_SM2 = stateTable[1].CURRENT_STATE;
     }
 }
 
-void Handle_Disconnect()
+int Handle_Disconnect()
 {
+//	log_Handle_Disconnect();
     if (db_f == 1)                    //check for debug flag to glow the leds
     {
-        blink(1,1000);               //blink the red led for disconnected state
+        blink(0,10000);               //blink the red led for disconnected state
     }
+ //   log_blink_led(1);
+  //  log_Handle_Disconnect();
     PRINTF("\n\n\r--------------------------------- Sensor Disconnected-----------------------\n\n\r ");
-    exit (0);
+    return 0;
+
+
 }
 
-void POST()
+int POST()
 {
-    i2c_read_bytes(addr,temp_addr,2);
-    int i;
-    PRINTF("\n\n\r-------------------------Power on Self test--------------------------------------------\n\r");
-    //Call I2c here
+	log_POST(1);
+	int post_disc=i2c_read_bytes_post(addr, temp_addr, 2);
+
+	if (post_disc==0)
+	{return 0;}
+
     if (nack_f == 0)
     {
 
-        for (i=0; i<=3; i++)
+    //    for (i=0; i<=3; i++)
         {
             if (db_f == 1)      //check for debug flag to glow the leds
             {
@@ -178,24 +183,75 @@ void POST()
                 blink(2,250);
             }
         }
-        PRINTF("\n\n \n\r-------------------POST Successful----------------------------------------------\n\r");
+        log_POST(2);
+        //PRINTF("\n\n \n\r-------------------POST Successful----------------------------------------------\n\r");
     }
     else
     {
-        Handle_Disconnect();
+        int disconnect7= Handle_Disconnect();  //go to disconnect function
+        if (disconnect7==0)
+        return 0;
     }
+    PRINTF("\n\rTemperature values=");
+    i2c_read_bytes(addr, temp_addr,0);
+
+
+    wait_to_complete();
+
+
+    //write temp high register values into tmp102
+
+    i2c_write_byte(addr,temp_high_register,Temp_high_byte1,Temp_high_byte2);
+
+    wait_to_complete();
+
+    PRINTF("\n\rTEMP_HIGH_VALUES\n\r");
+    i2c_read_bytes(addr, temp_high_register,0);
+
+    wait_to_complete();
+
+    //write temp low register values into tmp102
+
+    i2c_write_byte(addr,temp_low_register,Temp_low_byte1,Temp_low_byte2);
+
+    wait_to_complete();
+
+    PRINTF("\n\rTEMP_LOW_VALUES\n\r");
+    i2c_read_bytes(addr, temp_low_register,0);
+
+    wait_to_complete();
+    //write temp high register value into tmp102
+
+    i2c_write_byte(addr,config_addr,Config_byte1,Config_byte2);
+    wait_to_complete();
+
+
+    PRINTF("\n\rAlert bit checking\n\r");     //checking for the alert state by reading the alert bit toggle
+
+    i2c_read_bytes(addr, config_addr,1);
+
+    i2c_read_bytes(addr,temp_addr,2);
+//   int i;
+
+    log_blink_led(1);
+   // PRINTF("\n\n\r-------------------------Power on Self test--------------------------------------------\n\r");
+    //Call I2c here
+
 
 }
 
-void state_machines()
+int state_machines()
 {
 
-    POST();
+    int post_value=POST();
+    if (post_value==0)
+    {return 0;}
 
     //  State_Machine_1:                     //state machine 1 label
     while(1)
     {
         //state machine 1 label
+    	log_state_machines( 0);
         PRINTF("\n\r State Machine 1\n\r");
 
 
@@ -213,8 +269,13 @@ void state_machines()
             switch(Current_state_SM1)
             {
             case TEMP_READ:
-                PRINTF("\n\r The sensor is in TEMP_READ STATE\n\r");
-                Handle_Temp_Read();
+
+            	log_state_machines(1);
+             //   PRINTF("\n\r The sensor is in TEMP_READ STATE\n\r");
+                int st_tempread=Handle_Temp_Read();
+                if (st_tempread==0)
+                {return 0;}
+
                 					//    Read temperature here and set flags
                 if (db_f == 1)
                 {
@@ -224,76 +285,103 @@ void state_machines()
                 if (nack_f == 1)      //Disconnected
                 {
                     Current_state_SM1 = DISCONNECT;
-                    PRINTF("\n\r");
+                    log_next_line();
+                   // PRINTF("\n\r");
                     if (ut_f==1)                   //check for the unit test flag
                     {
-                        PRINTF("\n\r");
+                    	 log_next_line();
+                   //     PRINTF("\n\r");
                         UCUNIT_CheckIsEqual(nack_f,1);
-                        PRINTF("\n\r");
+                        log_next_line();
+                    //    PRINTF("\n\r");
                     }
-                    PRINTF("\n\r");
+                    log_next_line();
+                  //  PRINTF("\n\r");
                     break;
                 }
                 if (al_f == 1)        //Temperature Alert
                 {
                     Current_state_SM1 = TEMP_ALERT;   //the transition will be to Temperature Alert
-                    PRINTF("\n\r");
+                   // PRINTF("\n\r The sensor is in TEMP_ALERT STATE\n\r");
+
+                    log_next_line();
+                  //  PRINTF("\n\r");
                     if (ut_f==1)				//check for the unit test flag
                     {
-                        PRINTF("\n\r");
+                    	 log_next_line();
+                    //    PRINTF("\n\r");
                         UCUNIT_CheckIsEqual(al_f,1);
-                        PRINTF("\n\r");
+                        log_next_line();
+                      //  PRINTF("\n\r");
                     }
-                    PRINTF("\n\r");
+                    log_next_line();
+                   // PRINTF("\n\r");
                     break;
                 }
                 else                  //Normal Temperature read
                 {
-                    PRINTF("\n\r");
+                	 log_next_line();
+                   // PRINTF("\n\r");
                     if (ut_f==1)
                     {
-                        PRINTF("\n\r");              //unit test
+                    	 log_next_line();
+                      //  PRINTF("\n\r");              //unit test
                         UCUNIT_CheckIsEqual(Current_state_SM1,TEMP_READ);
-                        PRINTF("\n\r");
+                        log_next_line();
+                       // PRINTF("\n\r");
                     }
-                    PRINTF("\n\r");
+                    log_next_line();
+                    //PRINTF("\n\r");
                     Current_state_SM1 = AVERAGE_WAIT;
                     break;
                 }
 
             case AVERAGE_WAIT:
 
+
                 if (db_f == 1)
                 {
                     blink(1,1000);
                 }
-                PRINTF("\n\r The sensor is in AVERAGE_WAIT STATE\n\r");
-                Handle_Average_Wait();
+                log_state_machines(2);
+                //PRINTF("\n\r The sensor is in AVERAGE_WAIT STATE\n\r");
+                int st_average_wait=Handle_Average_Wait();
+                if (st_average_wait==0)
+                {return 0;}
                 if (nack_f == 1)      //Disconnected
                 {
                     Current_state_SM1 = DISCONNECT;
-                    PRINTF("\n\r");                //the transition will be to Disconnected
+                    log_next_line();
+                    //PRINTF("\n\r");                //the transition will be to Disconnected
                     if (ut_f==1)
                     {
-                        PRINTF("\n\r");      //unit test
+                    	 log_next_line();
+                      //  PRINTF("\n\r");      //unit test
                         UCUNIT_CheckIsEqual(nack_f,1);
-                        PRINTF("\n\r");
+                        log_next_line();
+                       // PRINTF("\n\r");
                     }
-                    PRINTF("\n\r");
+                    log_next_line();
+                   // PRINTF("\n\r");
                     break;
                 }
                 else
                 {
-                    PRINTF("\n\r");  //else go into the average/wait state
+                	 log_next_line();
+                    //PRINTF("\n\r");  //else go into the average/wait state
                     if (ut_f==1)      //check for the unit test flag
                     {
-                        PRINTF("\n\r");			//unit test
+                    	 log_next_line();
+                      //  PRINTF("\n\r");			//unit test
                         UCUNIT_CheckIsEqual(Current_state_SM1,AVERAGE_WAIT);
-                        PRINTF("\n\r");
+                        log_next_line();
+                       // PRINTF("\n\r");
                     }
-                    PRINTF("\n\r");
+                    log_next_line();
+                   // PRINTF("\n\r");
                     Current_state_SM1 = TEMP_READ;    //the transition will be to temp read
-                    timeout_val++;
+                    //timeout_val++;
+
                     delay(timeout_delay);
                     break;
                 }
@@ -303,17 +391,22 @@ void state_machines()
                 {
                     blink(2,1000);
                 }
-                PRINTF("\n\r The sensor is in TEMP_ALERT STATE\n\r");
-                Handle_Temperature_Alert();
+                log_state_machines(3);
+              //  PRINTF("\n\r The sensor is in TEMP_ALERT STATE\n\r");
+                int st_temp_alert=Handle_Temperature_Alert();
+                if (st_temp_alert==0)
+                {return 0;}
                 al_f =0;     	      //RESET the alert Flag
                 if (nack_f == 1)      //Disconnected
                 {
                     Current_state_SM1 = DISCONNECT;      //the transition will be to disconnected
                     if (ut_f==1)
                     {
-                        PRINTF("\n\r");
+                    	 log_next_line();
+                        //PRINTF("\n\r");
                         UCUNIT_CheckIsEqual(nack_f,1);   //carry out unit test
-                        PRINTF("\n\r");
+                        log_next_line();
+                       // PRINTF("\n\r");
                     }
                     break;
                 }
@@ -338,11 +431,16 @@ void state_machines()
 
             case DISCONNECT:   //for disconnect state check the debug flag
                 //and glow red led
+            {
                 if (db_f == 1)
                 {
                     blink(0,1000);
                 }
-                Handle_Disconnect();  //go to disconnect function
+                int disconnect2= Handle_Disconnect();  //go to disconnect function
+                if (disconnect2==0)
+                return 0;
+                break;
+            }
 
 
             }
@@ -355,65 +453,90 @@ void state_machines()
 //////////////////////////////State Machine 2//////////////////////////////////////////
         timeout_val = 0;
         Current_state_SM2 = TEMP_READ;       //initializing first state
-        PRINTF("\n \n\r State Machine 2\n\r");
+        log_state_machines(4);
+        //PRINTF("\n \n\r State Machine 2\n\r");
 
 
         while (timeout_val < 4 )
         {
             if (Current_state_SM2 == stateTable[0].CURRENT_STATE)
             {
-                PRINTF("\n \n\rWe are in Temperature read state\n\r");
-                Handle_Temp_Read();
+            	log_state_machines(5);
+                //PRINTF("\n \n\rWe are in Temperature read state\n\r");
+                int st_temp=Handle_Temp_Read();
+                if (st_temp==0)
+                {return 0;}
                 if (db_f == 1)           //check for the debug status and blink led
                 {
                     blink(1,1000);
                 }
                 if (nack_f==1)            //check for no ack in the read function and got to disconnect
                 {
-                    Handle_Disconnect();
+                    int disconnect3= Handle_Disconnect();  //go to disconnect function
+                    if (disconnect3==0)
+                    return 0;
+
+
                 }
 
             }
             if (Current_state_SM2 == stateTable[1].CURRENT_STATE)
             {
-                PRINTF("\n\n\r We are in Temperature Wait Average state\n\r");
-                Handle_Average_Wait();
+            	log_state_machines(6);
+                //PRINTF("\n\n\r We are in Temperature Wait Average state\n\r");
+                int st_wait=Handle_Average_Wait();
+                if (st_wait==0)
+                {return 0;}
                 if (db_f == 1)         //check for the debug status and blink led
                 {
                     blink(1,1000);
                 }
                 if (nack_f==1)      //check for no ack in the read function and go to disconnect
                 {
-                    Handle_Disconnect();
+                    int disconnect4= Handle_Disconnect();  //go to disconnect function
+                    if (disconnect4==0)
+                    return 0;
+
                 }
 
             }
             if (Current_state_SM2 == stateTable[2].CURRENT_STATE)
             {
-                PRINTF("\n\r We are in Temperature Temperature Alert state\n\r");
-                Handle_Temperature_Alert();
+            	log_state_machines(7);
+                //PRINTF("\n\r We are in Temperature Temperature Alert state\n\r");
+                int st_alert=Handle_Temperature_Alert();
+                if (st_alert==0)
+                	{return 0;}
                 if (db_f == 1)      //check for the debug status and blink led
                 {
                     blink(2,1000);
                 }
                 if (nack_f==1)    //check for no ack in the read function and go to disconnect
                 {
-                    Handle_Disconnect();
+                    int disconnect5= Handle_Disconnect();  //go to disconnect function
+                    if (disconnect5==0)
+                    return 0;
+
                 }
 
             }
             if (Current_state_SM2 == stateTable[3].CURRENT_STATE)
             {
-                PRINTF("\n\n\r We are in Disconnect state\n\r");
-                Handle_Disconnect();
-                if (db_f == 1)        //check for the debug status and blink led
-                {
-                    blink(0,1000);
-                }
-                if (nack_f==1)     //check for no ack in the read function and go to disconnect
-                {
-                    Handle_Disconnect();
-                }
+           //     PRINTF("\n\n\r We are in Disconnect state\n\r");
+                int disconnect6= Handle_Disconnect();  //go to disconnect function
+                if (disconnect6==0)
+                return 0;  //go to disconnect function
+//                if (disconnect==0)
+//                return 3;
+//                if (db_f == 1)        //check for the debug status and blink led
+//                {
+//                    blink(0,1000);
+//                }
+//                if (nack_f==1)     //check for no ack in the read function and go to disconnect
+//                {
+//                    Handle_Disconnect();
+//                    return 0;
+//                }
 
             }
 
@@ -421,17 +544,29 @@ void state_machines()
 
     }
 
-    PRINTF("\n\r");
+
+    log_next_line();
+
+//    void end_state()
+//    {
+   // PRINTF("\n\r");
     if (ut_f==1)
     {
-        PRINTF("\n\r");
+    	 log_next_line();
+      //  PRINTF("\n\r");
         UCUNIT_TestcaseEnd();
-        PRINTF("\n\r");
+        log_next_line();
+       // PRINTF("\n\r");
         UCUNIT_WriteSummary();
-        PRINTF("\n\r");
+        log_next_line();
+      //  PRINTF("\n\r");
         UCUNIT_Shutdown();
-        PRINTF("\n\r");
+        log_next_line();
+      // PRINTF("\n\r");
     }
-    PRINTF("\n\r");
+    log_next_line();
+   // PRINTF("\n\r");
 
+
+//}
 }

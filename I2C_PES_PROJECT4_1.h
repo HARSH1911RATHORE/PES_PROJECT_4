@@ -11,6 +11,9 @@
 #include "fsl_common.h"
 #include "MKL25Z4.h"
 #include <fsl_debug_console.h>
+#include "led.h"
+
+
 
 
 #define I2C_M_START   I2C0->C1 |= I2C_C1_MST_MASK      //start condition
@@ -23,6 +26,12 @@
 #define I2C_WAIT      while((I2C0->S & I2C_S_IICIF_MASK)==0) {} \
                        I2C0->S |= I2C_S_IICIF_MASK;         //wait condition for read waiting for interrupt
 
+#define WAIT2     while((I2C0->S & I2C_S_IICIF_MASK)==0) \
+								{  \
+											counter2++;\
+											if (counter2==7000){noack_f=1;break;}\
+								 } \
+									I2C0->S |= I2C_S_IICIF_MASK;
 
 #define NACK  I2C0->C1 |= I2C_C1_TXAK_MASK  //No  Acknowledgement after last write byte
 #define ACK   I2C0->C1 &= ~I2C_C1_TXAK_MASK  // Acknowledgment after last write byte
@@ -36,7 +45,7 @@
 #define Temp_high_byte1 0x25
 #define Temp_high_byte2 0x00
 
-#define Temp_low_byte1 0x17
+#define Temp_low_byte1 0x14
 #define Temp_low_byte2 0x00
 
 
@@ -51,6 +60,8 @@
 void i2c_init(void);
 void i2c_write_byte(uint8_t dev, uint8_t reg, uint8_t data_byte1,uint8_t data_byte2);
 int i2c_read_bytes(uint8_t dev_adx,uint8_t reg_adx,int CR);
-void i2c_read_byte(uint8_t dev, uint8_t reg);
+int i2c_read_bytes_post(uint8_t dev_adx,uint8_t reg_adx,int CR);
+
+
 
 #endif

@@ -7,7 +7,8 @@
 #include "system.h"
 
 
-
+int noack_f=0;
+static volatile int counter2=0;
 
 
 void i2c_init(void)
@@ -67,6 +68,8 @@ void i2c_write_byte(uint8_t dev, uint8_t reg, uint8_t data_byte1,uint8_t data_by
     I2C_WAIT				 /*WAIT FOR ACK*/
 
     I2C_M_STOP;				/*send a stop bit */
+
+    log_i2c_write_bytes();
 }
 
 
@@ -108,24 +111,105 @@ int i2c_read_bytes(uint8_t dev_adx,uint8_t reg_adx,int CR)
 
     I2C_M_STOP;         /*SEND STOP*/
 
+    //log_i2c_read_bytes();
+
+
     if (CR==0)          /*check if it is a configuration byte read and print the value of
      	 	 	 	 	 	 	 	 	 desired byte*/
-
-        PRINTF("\n\r%d",data_buf[0]);
+    //	log_i2c_read_bytes(0,data_buf[0]);
+      PRINTF("\n\r%d",data_buf[0]);
     else if(CR==1)
-
+    //	log_i2c_read_bytes(1,data_buf[1]);
         PRINTF("\n\r%d\n\r",data_buf[1]);
 
-    if (data_buf[0]==144)  //checking for disconnected state
+    if (data_buf[0]==144 && data_buf[0]==255)  //checking for disconnected state
     {
         nack_f=1;
-        Handle_Disconnect();   //going into the disconnected state
-    }
+        int disconnect8=Handle_Disconnect();   //going into the disconnected state
+        if (disconnect8==0)
+        {return 0;}
 
+
+    }
+    if (data_buf[1]==128)
+    {
+    	al_f =1;
+    }
     return data_buf[0];
 
 }
 
+int i2c_read_bytes_post(uint8_t dev_adx,uint8_t reg_adx,int CR)
+{
+    uint8_t data_buf[3];  /*take an array of 3 elements to store the data values*/
+    I2C_TRAN;             /*SET TO TRANSMIT MODE*/
+    I2C_M_START;       /*SEND START*/
+    I2C0->D = dev_adx;     /*send dev address (write)*/
+    WAIT2;           /*WAIT FOR completion*/
+
+if (noack_f==1)
+{
+	Handle_Disconnect();
+	return 0;
+}
+
+    I2C0->D = reg_adx;     /*send register address (write)*/
+    WAIT2;          /*WAIT FOR completion*/
+
+    I2C_M_RSTART;       /*REPEATED START*/
+    I2C0->D = dev_adx|0x01;     /*send dev address (read)*/
+
+    WAIT2  ;         /*WAIT FOR completion*/
+
+    I2C_REC;           /*SET TO RECEIVE MODE*/
+    ACK;              /*Tell hw to send ACK after read*/
+    data_buf[0] = I2C0->D;    /*DUMMY READ TO START I2C READ*/
+    if (data_buf[0]==0)
+    {
+    	Handle_Disconnect();
+    	return 0;
+    }
+    WAIT2   ;       		/*WAIT FOR COMPLETION*/
+
+
+    data_buf[0] = I2C0->D;  /*put value of temperature in data array*/
+    WAIT2;
+
+    data_buf[1] = I2C0->D;    /*put data value byte 2 in data_buf[1]*/
+    WAIT2;
+
+    NACK;              /*Tell hardware to send NACK after read*/
+
+    I2C_M_STOP;         /*SEND STOP*/
+
+    //log_i2c_read_bytes();
+
+
+    if (CR==0)          /*check if it is a configuration byte read and print the value of
+     	 	 	 	 	 	 	 	 	 desired byte*/
+    //	log_i2c_read_bytes(0,data_buf[0]);
+      PRINTF("\n\r%d",data_buf[0]);
+    else if(CR==1)
+    //	log_i2c_read_bytes(1,data_buf[1]);
+        PRINTF("\n\r%d\n\r",data_buf[1]);
+
+    return data_buf[0];
+
+}
+//int Handle_Disconnect()
+//{
+////	log_Handle_Disconnect();
+//    if (db_f == 1)                    //check for debug flag to glow the leds
+//    {
+//        blink(1,10000);               //blink the red led for disconnected state
+//    }
+// //   log_blink_led(1);
+//  //  log_Handle_Disconnect();
+//    PRINTF("\n\n\r--------------------------------- Sensor Disconnected-----------------------\n\n\r ");
+//    exit(0);
+//
+//
+//}
 
 void wait_to_complete(void)
 {
@@ -150,52 +234,10 @@ int main(void)
     LED_GREEN_INIT(1);   //Initialization of rgb leds pin
     LED_BLUE_INIT(1);
 
-    PRINTF("Hello World\n\r");
+
     i2c_init();    //go to i2c init function
 
-//    SIM->SCGC5 |= SIM_SCGC5_PORTB_MASK;
-//
-//    PORTB->PCR[18] &=~ PORT_PCR_MUX_MASK;
-//    PORTB->PCR[18] |= PORT_PCR_MUX(1);
-//
 
-    PRINTF("\n\rTemperature values=");
-    i2c_read_bytes(addr, temp_addr,0);
-
-
-    wait_to_complete();
-
-
-    //write temp high register values into tmp102
-
-    i2c_write_byte(addr,temp_high_register,Temp_high_byte1,Temp_high_byte2);
-
-    wait_to_complete();
-
-    PRINTF("\n\rTEMP_HIGH_VALUES\n\r");
-    i2c_read_bytes(addr, temp_high_register,0);
-
-    wait_to_complete();
-
-    //write temp low register values into tmp102
-
-    i2c_write_byte(addr,temp_low_register,Temp_low_byte1,Temp_low_byte2);
-
-    wait_to_complete();
-
-    PRINTF("\n\rTEMP_LOW_VALUES\n\r");
-    i2c_read_bytes(addr, temp_low_register,0);
-
-    wait_to_complete();
-    //write temp high register value into tmp102
-
-    i2c_write_byte(addr,config_addr,Config_byte1,Config_byte2);
-    wait_to_complete();
-
-
-    PRINTF("\n\rAlert bit checking\n\r");     //checking for the alert state by reading the alert bit toggle
-
-    i2c_read_bytes(addr, config_addr,1);
 
 //
 //    if (PTA->PDDR == (0UL << 4 ) )    //checking if port c pin connected to
@@ -210,14 +252,17 @@ int main(void)
     //////////////////////////state machine 1///////////////////////////////////////////////
 
 
-    state_machines();     //go to state machine logic
+    int state_machine_test=state_machines();     //go to state machine logic
+
+    if (state_machine_test==0)
+    {PRINTF("\n\n\r--------------------------------- Sensor Disconnected-----------------------\n\n\r ");}
 
 
     __enable_irq();
     NVIC->ICPR[4] |= 1<<PORTA_IRQn ;  //enable irq for porta which works as a gpio and toggles the blue led
     NVIC->ISER[4] |= 1<<PORTA_IRQn ;
 //    NVIC_EnableIRQ(IRQn)
-    return 0 ;
+    return(0) ;
 }
 
 void PORTA_IRQHandler (void)
