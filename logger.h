@@ -40,5 +40,6 @@ void log_state_machines(int check_state_machine);
 void log_next_line();
 void log_i2c_write_bytes();
 void log_Handle_Temp_Read(int temperature_read);
+void log_Handle_Temperature_Alert();
 
 #endif

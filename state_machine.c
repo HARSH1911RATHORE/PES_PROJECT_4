@@ -27,7 +27,9 @@ int Handle_Temp_Read()
 
 
     if (temperature_read==1)
-    {return 1;}
+    {
+        return 1;
+    }
 
     log_Handle_Temp_Read(temperature_read);
 
@@ -40,7 +42,7 @@ int Handle_Temp_Read()
 
         if (ut_f==1)                 //check for the unit test flag
         {
-        	log_next_line();
+            log_next_line();
 
             UCUNIT_CheckIsEqual(nack_f,1);  //perform unit test
             log_next_line();
@@ -70,16 +72,18 @@ int Handle_Average_Wait()
 
     data[timeout_val]=i2c_read_bytes(addr,temp_addr,0);    //put the data into an array to perform average
     if (data[timeout_val]==1)
-    {return 1;}
+    {
+        return 1;
+    }
 
     current_data=data[timeout_val];
     if (AVERAGE==0)
     {
-    	AVERAGE=data[timeout_val];
+        AVERAGE=data[timeout_val];
     }
     else if (AVERAGE!=0)
     {
-    	AVERAGE=(AVERAGE+data[timeout_val])/2;
+        AVERAGE=(AVERAGE+data[timeout_val])/2;
     }
 
     log_Handle_Average_Wait(current_data,AVERAGE);
@@ -93,7 +97,7 @@ int Handle_Average_Wait()
 
         if (ut_f==1)						//check for the unit test flag
         {
-        	 log_next_line();
+            log_next_line();
 
             UCUNIT_CheckIsEqual(nack_f,1);  //perform unit test
             log_next_line();
@@ -108,7 +112,7 @@ int Handle_Average_Wait()
         timeout_val++;
         if (timeout_val==4)
         {
-        	count_avg=0;
+            count_avg=0;
         }
         delay(timeout_delay);
     }
@@ -117,13 +121,26 @@ int Handle_Average_Wait()
 
 int Handle_Temperature_Alert()
 {
-	log_Handle_Temperature_Alert();
+    log_Handle_Temperature_Alert();
 
-	int alert_check=i2c_read_bytes(addr,temp_addr,2);
+    int alert_check=i2c_read_bytes(addr,temp_addr,2);
+
     if (alert_check==1)
-    {return 1;}
+    {
+        return 1;
+    }
+    int alert_check1=i2c_read_bytes(addr,temp_addr,1);
+    if(alert_check1 ==128 || alert_check1 ==-128  )
+    {
 
-        	      //RESET the alert Flag
+    	 al_f =1;
+         if (db_f == 1)
+         {
+             blink(2,1000);
+         }                                          //blue led blink
+    }
+
+    //RESET the alert Flag
     if (nack_f == 1)      //Disconnected
     {
         Current_state_SM2 = stateTable[3].CURRENT_STATE;
@@ -131,7 +148,7 @@ int Handle_Temperature_Alert()
 
         if (ut_f==1)
         {
-        	 log_next_line();
+            log_next_line();
 
             UCUNIT_CheckIsEqual(nack_f,1); //check for the unit test flag
             log_next_line();
@@ -142,13 +159,13 @@ int Handle_Temperature_Alert()
     }
     if (al_f==1)
     {
-    	Current_state_SM2 = stateTable[3].CURRENT_STATE;
+        Current_state_SM2 = stateTable[3].CURRENT_STATE;
 
     }
     else
     {
-    	al_f =0;
-    	Current_state_SM2 = stateTable[2].CURRENT_STATE;
+        al_f =0;
+        Current_state_SM2 = stateTable[2].CURRENT_STATE;
     }
     return 0;
 }
@@ -169,11 +186,13 @@ int Handle_Disconnect()
 
 int POST()
 {
-	log_POST(1);
-	int post_disc=i2c_read_bytes_post(addr, temp_addr, 2);
+    log_POST(1);
+    int post_disc=i2c_read_bytes_post(addr, temp_addr, 2);
 
-	if (post_disc==1)
-	{return 1;}
+    if (post_disc==1)
+    {
+        return 1;
+    }
 
     if (nack_f == 0)
     {
@@ -195,7 +214,7 @@ int POST()
     {
         int disconnect7= Handle_Disconnect();  //go to disconnect function
         if (disconnect7==1)
-        return 1;
+            return 1;
     }
     PRINTF("\n\rTemperature values=");
     i2c_read_bytes(addr, temp_addr,0);
@@ -230,9 +249,6 @@ int POST()
     i2c_write_byte(addr,config_addr,Config_byte1,Config_byte2);
     wait_to_complete();
 
-
-
-
     i2c_read_bytes(addr, config_addr,1);
 
     i2c_read_bytes(addr,temp_addr,2);
@@ -240,9 +256,9 @@ int POST()
 
     log_blink_led(1);
 
-    //Call I2c here
 
-return 0;
+
+    return 0;
 
 }
 
@@ -251,7 +267,9 @@ int state_machines()
 
     int post_value=POST();
     if (post_value==1)
-    {return 1;}
+    {
+        return 1;
+    }
 
     //  State_Machine_1:                     //state machine 1 label
     while(1)
@@ -277,13 +295,15 @@ int state_machines()
             case TEMP_READ:
             {
 
-            	log_state_machines(1);
+                log_state_machines(1);
 
                 int st_tempread=Handle_Temp_Read();
                 if (st_tempread==1)
-                {return 1;}
+                {
+                    return 1;
+                }
 
-                					//    Read temperature here and set flags
+                //    Read temperature here and set flags
                 if (db_f == 1)
                 {
                     blink(1,1000);
@@ -296,7 +316,7 @@ int state_machines()
 
                     if (ut_f==1)                   //check for the unit test flag
                     {
-                    	 log_next_line();
+                        log_next_line();
 
                         UCUNIT_CheckIsEqual(nack_f,1);
                         log_next_line();
@@ -315,7 +335,7 @@ int state_machines()
 
                     if (ut_f==1)				//check for the unit test flag
                     {
-                    	 log_next_line();
+                        log_next_line();
 
                         UCUNIT_CheckIsEqual(al_f,1);
                         log_next_line();
@@ -327,12 +347,12 @@ int state_machines()
                 }
                 else                  //Normal Temperature read
                 {
-                	 log_next_line();
+                    log_next_line();
 
                     if (ut_f==1)
                     {
-                    	 log_next_line();
-                                  //unit test
+                        log_next_line();
+                        //unit test
                         UCUNIT_CheckIsEqual(Current_state_SM1,TEMP_READ);
                         log_next_line();
 
@@ -357,16 +377,18 @@ int state_machines()
 
                 int st_average_wait=Handle_Average_Wait();
                 if (st_average_wait==1)
-                {return 1;}
+                {
+                    return 1;
+                }
                 if (nack_f == 1)      //Disconnected
                 {
                     Current_state_SM1 = DISCONNECT;
                     log_next_line();
-                                   //the transition will be to Disconnected
+                    //the transition will be to Disconnected
                     if (ut_f==1)
                     {
-                    	 log_next_line();
-                         //unit test
+                        log_next_line();
+                        //unit test
                         UCUNIT_CheckIsEqual(nack_f,1);
                         log_next_line();
 
@@ -384,7 +406,7 @@ int state_machines()
 
                     if (ut_f==1)				//check for the unit test flag
                     {
-                    	 log_next_line();
+                        log_next_line();
 
                         UCUNIT_CheckIsEqual(al_f,1);
                         log_next_line();
@@ -396,12 +418,12 @@ int state_machines()
                 }
                 else
                 {
-                	 log_next_line();
+                    log_next_line();
                     //else go into the average/wait state
                     if (ut_f==1)      //check for the unit test flag
                     {
-                    	 log_next_line();
-                     			//unit test
+                        log_next_line();
+                        //unit test
                         UCUNIT_CheckIsEqual(Current_state_SM1,AVERAGE_WAIT);
                         log_next_line();
 
@@ -422,23 +444,25 @@ int state_machines()
                 if (db_f == 1)
                 {
                     blink(2,1000);
-                }
+                }                                          //blue led blink
                 log_state_machines(3);
 
                 int st_temp_alert=Handle_Temperature_Alert();
                 if (st_temp_alert==1)
-                {return 1;}
+                {
+                    return 1;
+                }
                 al_f =0;     	      //RESET the alert Flag
                 if (nack_f == 1)      //Disconnected
                 {
                     Current_state_SM1 = DISCONNECT;      //the transition will be to disconnected
                     if (ut_f==1)
                     {
-                    	 log_next_line();
-                        //PRINTF("\n\r");
+                        log_next_line();
+
                         UCUNIT_CheckIsEqual(nack_f,1);   //carry out unit test
                         log_next_line();
-                       // PRINTF("\n\r");
+
                     }
                     break;
                 }
@@ -472,7 +496,7 @@ int state_machines()
                 }
                 int disconnect2= Handle_Disconnect();  //go to disconnect function
                 if (disconnect2==1)
-                return 1;
+                    return 1;
                 break;
             }
 
@@ -495,11 +519,13 @@ int state_machines()
         {
             if (Current_state_SM2 == stateTable[0].CURRENT_STATE)
             {
-            	log_state_machines(5);
+                log_state_machines(5);
 
                 int st_temp=Handle_Temp_Read();
                 if (st_temp==1)
-                {return 1;}
+                {
+                    return 1;
+                }
                 if (db_f == 1)           //check for the debug status and blink led
                 {
                     blink(1,1000);
@@ -508,22 +534,22 @@ int state_machines()
                 {
                     int disconnect3= Handle_Disconnect();  //go to disconnect function
                     if (disconnect3==1)
-                    return 1;
+                        return 1;
 
 
                 }
                 if (al_f == 1)        //Temperature Alert
                 {
-                	(Current_state_SM2 = stateTable[2].CURRENT_STATE);   //the transition will be to Temperature Alert
+                    (Current_state_SM2 = stateTable[2].CURRENT_STATE);   //the transition will be to Temperature Alert
 
 
                     log_next_line();
 
                     if (ut_f==1)				//check for the unit test flag
                     {
-                    	 log_next_line();
+                        log_next_line();
 
-                        UCUNIT_CheckIsEqual(al_f,1);
+                        UCUNIT_CheckIsEqual(al_f,1);        //checking unit test
                         log_next_line();
 
                     }
@@ -535,11 +561,13 @@ int state_machines()
             }
             if (Current_state_SM2 == stateTable[1].CURRENT_STATE)
             {
-            	log_state_machines(6);
+                log_state_machines(6);
 
                 int st_wait=Handle_Average_Wait();
                 if (st_wait==1)
-                {return 1;}
+                {
+                    return 1;
+                }
                 if (db_f == 1)         //check for the debug status and blink led
                 {
                     blink(1,1000);
@@ -548,21 +576,21 @@ int state_machines()
                 {
                     int disconnect4= Handle_Disconnect();  //go to disconnect function
                     if (disconnect4==1)
-                    return 1;
+                        return 1;
 
                 }
                 if (al_f == 1)        //Temperature Alert
                 {
-                	(Current_state_SM2 = stateTable[2].CURRENT_STATE);   //the transition will be to Temperature Alert
+                    (Current_state_SM2 = stateTable[2].CURRENT_STATE);   //the transition will be to Temperature Alert
 
 
                     log_next_line();
 
                     if (ut_f==1)				//check for the unit test flag
                     {
-                    	 log_next_line();
+                        log_next_line();
 
-                        UCUNIT_CheckIsEqual(al_f,1);
+                        UCUNIT_CheckIsEqual(al_f,1);       //checking unit test
                         log_next_line();
 
                     }
@@ -575,11 +603,13 @@ int state_machines()
 
             if (Current_state_SM2 == stateTable[2].CURRENT_STATE)
             {
-            	log_state_machines(7);
+                log_state_machines(7);
 
                 int st_alert=Handle_Temperature_Alert();
                 if (st_alert==1)
-                	{return 1;}
+                {
+                    return 1;
+                }
                 if (db_f == 1)      //check for the debug status and blink led
                 {
                     blink(2,1000);
@@ -588,21 +618,21 @@ int state_machines()
                 {
                     int disconnect5= Handle_Disconnect();  //go to disconnect function
                     if (disconnect5==1)
-                    return 1;
+                        return 1;
 
                 }
                 if (al_f == 1)        //Temperature Alert
                 {
-                	(Current_state_SM2 = stateTable[2].CURRENT_STATE);   //the transition will be to Temperature Alert
+                    (Current_state_SM2 = stateTable[2].CURRENT_STATE);   //the transition will be to Temperature Alert
                     PRINTF("\n\r The sensor is in TEMP_ALERT STATE\n\r");
 
                     log_next_line();
 
                     if (ut_f==1)				//check for the unit test flag
                     {
-                    	 log_next_line();
+                        log_next_line();
 
-                        UCUNIT_CheckIsEqual(al_f,1);
+                        UCUNIT_CheckIsEqual(al_f,1);        //checking unit test flags
                         log_next_line();
 
                     }
@@ -617,7 +647,7 @@ int state_machines()
 
                 int disconnect6= Handle_Disconnect();  //go to disconnect function
                 if (disconnect6==1)
-                return 1;  //go to disconnect function
+                    return 1;  //go to disconnect function
 
 
             }
@@ -632,12 +662,12 @@ int state_machines()
 
     if (ut_f==1)
     {
-    	 log_next_line();
+        log_next_line();
 
         UCUNIT_TestcaseEnd();
         log_next_line();
 
-        UCUNIT_WriteSummary();
+        UCUNIT_WriteSummary();   //checking unit test flags
         log_next_line();
 
         UCUNIT_Shutdown();

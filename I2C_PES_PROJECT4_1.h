@@ -38,18 +38,19 @@
 
 #define addr  0x90
 #define config_addr  0x01
-#define temp_high_register  0x03
+#define temp_high_register  0x03           //setting the values of temp high,config register, temp read register
+													//low register, and their pointers
 #define temp_low_register  0x02
 
 #define temp_addr  0x00
-#define Temp_high_byte1 0x25
+#define Temp_high_byte1 0x19
 #define Temp_high_byte2 0x00
 
-#define Temp_low_byte1 0x14
-#define Temp_low_byte2 0x00
+#define Temp_low_byte1 0xFF
+#define Temp_low_byte2 0xFF
 
 
-#define Config_byte1 0x6C
+#define Config_byte1 0x6C				//SETTING VALUE OF CONFIG REGISTER
 #define Config_byte2 0xA0
 
 
@@ -57,6 +58,7 @@ void i2c_init(void);
 void i2c_write_byte(uint8_t dev, uint8_t reg, uint8_t data_byte1,uint8_t data_byte2);
 int i2c_read_bytes(uint8_t dev_adx,uint8_t reg_adx,int CR);
 int i2c_read_bytes_post(uint8_t dev_adx,uint8_t reg_adx,int CR);
+
 
 
 
