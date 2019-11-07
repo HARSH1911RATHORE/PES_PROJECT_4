@@ -13,7 +13,7 @@
 #include "fsl_common.h"
 #include "MKL25Z4.h"
 #include <fsl_debug_console.h>
-#include "I2C_PES_PROJECT4_1.h"
+#include <TMP102.h>
 #include "uCUnit.h"
 #include "system.h"
 #include "logger.h"

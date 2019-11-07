@@ -30,6 +30,11 @@ int Handle_Temp_Read()
     {
         return 1;
     }
+    else if (temperature_read==5)
+    {
+        return 5;
+    }
+
 
     log_Handle_Temp_Read(temperature_read);
 
@@ -74,6 +79,10 @@ int Handle_Average_Wait()
     if (data[timeout_val]==1)
     {
         return 1;
+    }
+    else if (data[timeout_val]==5)
+    {
+        return 5;
     }
 
     current_data=data[timeout_val];
@@ -129,11 +138,13 @@ int Handle_Temperature_Alert()
     {
         return 1;
     }
+
     int alert_check1=i2c_read_bytes(addr,temp_addr,1);
-    if(alert_check1 ==128 || alert_check1 ==-128  )
+    if(alert_check1 ==128 || alert_check1 ==-128  )               //checking alert condition
     {
 
     	 al_f =1;
+    	 Current_state_SM2 = stateTable[3].CURRENT_STATE;
          if (db_f == 1)
          {
              blink(2,1000);
@@ -159,13 +170,13 @@ int Handle_Temperature_Alert()
     }
     if (al_f==1)
     {
-        Current_state_SM2 = stateTable[3].CURRENT_STATE;
+        Current_state_SM2 = stateTable[2].CURRENT_STATE;
 
     }
     else
     {
         al_f =0;
-        Current_state_SM2 = stateTable[2].CURRENT_STATE;
+        Current_state_SM2 = stateTable[3].CURRENT_STATE;
     }
     return 0;
 }
@@ -297,6 +308,7 @@ int state_machines()
 
                 log_state_machines(1);
 
+
                 int st_tempread=Handle_Temp_Read();
                 if (st_tempread==1)
                 {
@@ -326,7 +338,7 @@ int state_machines()
 
                     break;
                 }
-                if (al_f == 1)        //Temperature Alert
+                if (st_tempread==5)        //Temperature Alert
                 {
                     Current_state_SM1 = TEMP_ALERT;   //the transition will be to Temperature Alert
 
@@ -397,7 +409,7 @@ int state_machines()
 
                     break;
                 }
-                if (al_f == 1)        //Temperature Alert
+                if (st_average_wait==5)        //Temperature Alert
                 {
                     Current_state_SM1 = TEMP_ALERT;   //the transition will be to Temperature Alert
 
@@ -538,7 +550,7 @@ int state_machines()
 
 
                 }
-                if (al_f == 1)        //Temperature Alert
+                if (st_temp==5)        //Temperature Alert
                 {
                     (Current_state_SM2 = stateTable[2].CURRENT_STATE);   //the transition will be to Temperature Alert
 
@@ -579,7 +591,7 @@ int state_machines()
                         return 1;
 
                 }
-                if (al_f == 1)        //Temperature Alert
+                if (st_wait==5)        //Temperature Alert
                 {
                     (Current_state_SM2 = stateTable[2].CURRENT_STATE);   //the transition will be to Temperature Alert
 
@@ -621,7 +633,7 @@ int state_machines()
                         return 1;
 
                 }
-                if (al_f == 1)        //Temperature Alert
+                if (st_alert==5)        //Temperature Alert
                 {
                     (Current_state_SM2 = stateTable[2].CURRENT_STATE);   //the transition will be to Temperature Alert
                     PRINTF("\n\r The sensor is in TEMP_ALERT STATE\n\r");
