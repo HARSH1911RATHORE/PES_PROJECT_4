@@ -43,7 +43,7 @@
 #define temp_low_register  0x02
 
 #define temp_addr  0x00
-#define Temp_high_byte1 0x14
+#define Temp_high_byte1 0x18
 #define Temp_high_byte2 0x00
 
 #define Temp_low_byte1 0xFF
@@ -56,8 +56,10 @@
 
 void i2c_init(void);
 void i2c_write_byte(uint8_t dev, uint8_t reg, uint8_t data_byte1,uint8_t data_byte2);
-int i2c_read_bytes(uint8_t dev_adx,uint8_t reg_adx,int CR);
+int i2c_read_bytes(uint8_t dev_adx,uint8_t reg_adx,int CR);                //all list of read and write functions
 int i2c_read_bytes_post(uint8_t dev_adx,uint8_t reg_adx,int CR);
+int i2c_read_bytes_avg_alert(uint8_t dev_adx,uint8_t reg_adx);
+void PORTA_IRQHandler (void);
 
 
 

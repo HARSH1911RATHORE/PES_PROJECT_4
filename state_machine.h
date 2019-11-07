@@ -20,11 +20,9 @@
 #include "led.h"
 
 
-
-
 typedef enum
 {
-    Sucess,
+    Sucess,										//enum for various test operations
     Memory_Fault,
     other_errors
 } Error_codes;
@@ -54,11 +52,10 @@ struct sStateTableEntry
 
 
 
-static volatile int ut_f = 1;
+static volatile int ut_f = 1;                //flag to perform unit test  //if same flag is made 0 status messages are printed
 
-static volatile int db_f = 1;
+static volatile int db_f = 1;				//flag to perform debug
 
-//#define ALERT I2C0->SMB= I2C0->SMB |= I2C_SMB_ALERTEN_MASK
 //Global Flag Declarations
 
 static volatile int l_f = 0;                    //Logger Flag , Set when logger is on or enable
@@ -69,24 +66,24 @@ static volatile int timeout_val =1;             //value of timeout
 
 
 int state_machines();
-void delay(volatile int32_t number);
+void delay(volatile int32_t number);              //function prototype to perform various state machine operations
 void blink(int LED_no, int delay_counter);
 int Handle_Temp_Read();
-int Handle_Average_Wait();
+int Handle_Average_Wait();                       //all handle functions to perform various operations
 int Handle_Temperature_Alert();
 int Handle_Disconnect();
 void wait_to_complete(void);
-
+int i2c_read_bytes_avg(uint8_t dev_adx,uint8_t reg_adx);
 void log_blink_led(int check_led);
-
-void log_Handle_Average_Wait(int8_t current_data,int8_t AVERAGE);
+void log_Handle_Average_Wait(int8_t current_data,int8_t AVERAGE);   //all log functions  to perform various print operations
 void log_Handle_Disconnect();
 void log_POST(int check_post);
 void log_state_machines(int check_state_machine);
 void log_next_line();
-void log_i2c_write_bytes();
-void log_Handle_Temp_Read(int temperature_read);
+void log_i2c_write_bytes();                            //log functions for i2c and, led and state machine
+void log_Handle_Temp_Read();
 void log_Handle_Temperature_Alert();
+void log_alert(int alert_check);
 
 int POST();
 

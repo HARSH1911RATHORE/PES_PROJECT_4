@@ -17,11 +17,11 @@ void delay(volatile int32_t number)
 
 void blink(int LED_no, int delay_counter)
 {
-//	log_blink_led();
+
 
     if (LED_no==0)              //LED is Red
     {
-   // 	log_blink_led();
+
         LED_RED_ON();
         delay(delay_counter);   //give a delay to the led
         LED_RED_OFF();
@@ -29,7 +29,7 @@ void blink(int LED_no, int delay_counter)
 
     if (LED_no==1)               //LED is Green
     {
-  //  	log_blink_led();
+
         LED_GREEN_ON();
         delay(delay_counter);    //give a delay to the led
         LED_GREEN_OFF();
@@ -37,7 +37,7 @@ void blink(int LED_no, int delay_counter)
 
     if (LED_no==2)               //LED is Blue
     {
-    //	log_blink_led();
+
         LED_BLUE_ON();
         delay(delay_counter);  //give a delay to the led
         LED_BLUE_OFF();
